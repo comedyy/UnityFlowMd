@@ -44,6 +44,8 @@ public class Flow
         }
 
         Assert.IsNotNull(_entry, $"入口未找到 脚本：{_title}");
+
+        _currentNode = _entry;
     }
 
     private void ParseScriptType(string line)
@@ -119,5 +121,17 @@ public class Flow
         }
 
         return (node, false);
+    }
+
+    FlowNode _currentNode;
+    public void Update()
+    {
+        while(_currentNode != null)
+        {
+            if(_currentNode.IsDone)
+            {
+                
+            }
+        }
     }
 }

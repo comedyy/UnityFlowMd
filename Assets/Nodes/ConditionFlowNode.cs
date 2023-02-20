@@ -20,6 +20,16 @@ public class ConditionFlowNode : FlowNode
     {
         base.OnValidate();
         Assert.IsNotNull(nextFlowNo, $"condition节点【{name}】 【{title}】 不存在nocondition");
+        Assert.AreEqual(this.methodInfo.ReturnType, typeof(bool));
     }
+
+    bool m_Result;
+    public override void Excute()
+    {
+        m_Result = (bool)this.methodInfo.Invoke(null, null);
+        IsDone = true;
+    }
+
+    public override FlowNode NextFlow => m_Result ? nextFlow : nextFlowNo;
 }
 
