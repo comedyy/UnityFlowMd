@@ -11,6 +11,7 @@ public class Flow
     List<FlowNode> _allNodes = new List<FlowNode>();
     Type _scriptType;
     string _title;
+    public bool IsEnd{get; private set;}
 
     public void Init(string title, string mdFile)
     {
@@ -126,6 +127,11 @@ public class Flow
     FlowNode _currentNode;
     public void Update()
     {
+        if(IsEnd)
+        {
+            return;
+        }
+
         while(_currentNode != null)
         {
             if(!_currentNode.IsEntered)
@@ -143,5 +149,12 @@ public class Flow
 
             _currentNode = nextNode;
         }
+
+        IsEnd = _currentNode == null;
+    }
+
+    internal void SetException()
+    {
+        IsEnd = true;
     }
 }
