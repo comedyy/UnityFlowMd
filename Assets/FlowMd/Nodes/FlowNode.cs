@@ -47,7 +47,7 @@ public abstract class FlowNode
         Assert.IsNotNull(nextFlow, $"节点{name}  【{title}】 不存在下一个节点");
     }
 
-    public virtual FlowNode NextFlow => nextFlow;
+    public virtual FlowNode RunTimeNextFlow => nextFlow;
 
     public bool IsEntered{get; private set;}
     Task _curentTask;

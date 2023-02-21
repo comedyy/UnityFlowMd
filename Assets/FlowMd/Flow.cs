@@ -7,7 +7,7 @@ using UnityEngine.Assertions;
 
 public class Flow
 {
-    FlowNode _entry;
+    public FlowNode Entry{get; private set;}
     List<FlowNode> _allNodes = new List<FlowNode>();
     public IList<FlowNode> AllNodes => _allNodes;
     Type _scriptType;
@@ -24,13 +24,10 @@ public class Flow
             throw new System.Exception("format error");
         }
 
+        ParseScriptType(title);
         foreach (var line in lines)
         {
-            if(line.StartsWith("script"))
-            {
-                ParseScriptType(line);
-            }
-            else if(line.Contains("=>"))
+            if(line.Contains("=>"))
             {
                 ParseNode(line);
             }
@@ -45,42 +42,40 @@ public class Flow
             item.OnValidate();
         }
 
-        Assert.IsNotNull(_entry, $"入口未找到 脚本：{_title}");
+        Assert.IsNotNull(Entry, $"入口未找到 脚本：{_title}");
 
-        CurrentNode = _entry;
+        CurrentNode = Entry;
     }
 
     private void ParseScriptType(string line)
     {
-        var x = line.Split(new string[]{"=>"}, StringSplitOptions.None);
-        _scriptType = Type.GetType(x[1]);
+        _scriptType = Type.GetType(line);
 
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{x[1]} line={line}，脚本：{_title}");
+        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_title}");
     }
 
     void ParseNode(string line)
     {
         var x = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.None);
+
+        Assert.IsTrue(x.Length > 3);
+
         var name = x[0];
         var nodeType = x[1];
         var title = x[2];
 
         Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件，脚本：{_title}");
 
-        MethodInfo methodInfo = null;
-        if(x.Length > 3)
-        {
-            var method = x[3];
-            methodInfo = _scriptType.GetMethod(method, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-            Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_title}");
-        }
+        var method = x[3];
+        MethodInfo methodInfo = _scriptType.GetMethod(method, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_title}");
 
         var node = FlowNodeFactory.Create(nodeType, name, title, methodInfo);
         _allNodes.Add(node);
 
         if(node is StartFlowNode)
         {
-            _entry = node;
+            Entry = node;
         }
     }
 
@@ -145,7 +140,7 @@ public class Flow
                 break;
             }
 
-            var nextNode = CurrentNode.NextFlow;
+            var nextNode = CurrentNode.RunTimeNextFlow;
             CurrentNode.Exit();
 
             CurrentNode = nextNode;

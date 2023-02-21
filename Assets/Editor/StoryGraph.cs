@@ -23,9 +23,10 @@ public class StoryGraph : EditorWindow
 
     private void ConstructGraphView()
     {
-        var script = GameObject.FindObjectOfType<NewBehaviourScript>();
+        var x = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/FlowScript_log.md");
+        var flow = new Flow(x.name, x.text);
 
-        _graphView = new StoryGraphView(script.Flow)
+        _graphView = new StoryGraphView(flow)
         {
             name = "Narrative Graph",
         };
