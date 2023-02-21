@@ -45,22 +45,32 @@ public abstract class FlowNode
     }
 
     public virtual FlowNode NextFlow => nextFlow;
-    public virtual void Excute()
+
+    public bool IsEntered{get; private set;}
+    Task _curentTask;
+    public virtual void Enter()
     {
-        IsDone = false;
+        _curentTask = null;
+        IsEntered = true;
 
         if(methodInfo == null) return;
-        dynamic result = methodInfo.Invoke(null, null);
 
         if(asyncMethod)
         {
-            result.Wait();
+            _curentTask = (Task)methodInfo.Invoke(null, null);
         }
-
-        IsDone = true;
+        else
+        {
+            methodInfo.Invoke(null, null);
+        }
     }
 
-    public bool IsDone{get; protected set;}
+    public void Exit()
+    {
+        IsEntered = false;
+    }
+
+    public bool IsDone => _curentTask == null || _curentTask.IsCompleted;
 
     public static bool GetAsync(MethodInfo info)
     {

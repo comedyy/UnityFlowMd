@@ -24,10 +24,9 @@ public class ConditionFlowNode : FlowNode
     }
 
     bool m_Result;
-    public override void Excute()
+    public override void Enter()
     {
         m_Result = (bool)this.methodInfo.Invoke(null, null);
-        IsDone = true;
     }
 
     public override FlowNode NextFlow => m_Result ? nextFlow : nextFlowNo;

@@ -128,10 +128,20 @@ public class Flow
     {
         while(_currentNode != null)
         {
-            if(_currentNode.IsDone)
+            if(!_currentNode.IsEntered)
             {
-                
+                _currentNode.Enter();
             }
+
+            if(!_currentNode.IsDone)
+            {
+                break;
+            }
+
+            var nextNode = _currentNode.NextFlow;
+            _currentNode.Exit();
+
+            _currentNode = nextNode;
         }
     }
 }
