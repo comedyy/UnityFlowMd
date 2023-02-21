@@ -41,8 +41,7 @@ public class FlowMgr
             return null;
         }
 
-        var flow = new Flow();
-        flow.Init(title, context);
+        var flow = new Flow(title, context);
         _allFlow.Insert(0, flow);
 
         return flow;

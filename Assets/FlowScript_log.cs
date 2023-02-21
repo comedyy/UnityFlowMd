@@ -8,12 +8,13 @@ public class FlowScript_log
     public static async Task Start()
     {
         Debug.Log("enter Start");
-        await Task.Delay(2000);
+        await Task.Delay(5000);
         Debug.Log("Exit Start");
     }
 
-    public static void Say()
+    public static async Task Say()
     {
+        await Task.Delay(2000);
         Debug.Log("enter say");
     }
 

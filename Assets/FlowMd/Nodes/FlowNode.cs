@@ -22,6 +22,9 @@ public abstract class FlowNode
     public MethodInfo methodInfo;
     bool asyncMethod;
 
+    public event Action<FlowNode> OnEnterEvent;
+    public event Action<FlowNode> OnExitEvent;
+
     public FlowNode(string name, string title, MethodInfo info)
     {
         this.title = title;
@@ -63,11 +66,15 @@ public abstract class FlowNode
         {
             methodInfo.Invoke(null, null);
         }
+
+        OnEnterEvent?.Invoke(this);
     }
 
     public void Exit()
     {
         IsEntered = false;
+
+        OnExitEvent?.Invoke(this);
     }
 
     public bool IsDone => _curentTask == null || _curentTask.IsCompleted;

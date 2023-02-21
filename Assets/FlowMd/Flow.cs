@@ -9,11 +9,12 @@ public class Flow
 {
     FlowNode _entry;
     List<FlowNode> _allNodes = new List<FlowNode>();
+    public IList<FlowNode> AllNodes => _allNodes;
     Type _scriptType;
     string _title;
     public bool IsEnd{get; private set;}
 
-    public void Init(string title, string mdFile)
+    public Flow(string title, string mdFile)
     {
         _title = title;
 
@@ -46,7 +47,7 @@ public class Flow
 
         Assert.IsNotNull(_entry, $"入口未找到 脚本：{_title}");
 
-        _currentNode = _entry;
+        CurrentNode = _entry;
     }
 
     private void ParseScriptType(string line)
@@ -124,7 +125,7 @@ public class Flow
         return (node, false);
     }
 
-    FlowNode _currentNode;
+    public FlowNode CurrentNode{get; private set;}
     public void Update()
     {
         if(IsEnd)
@@ -132,25 +133,25 @@ public class Flow
             return;
         }
 
-        while(_currentNode != null)
+        while(CurrentNode != null)
         {
-            if(!_currentNode.IsEntered)
+            if(!CurrentNode.IsEntered)
             {
-                _currentNode.Enter();
+                CurrentNode.Enter();
             }
 
-            if(!_currentNode.IsDone)
+            if(!CurrentNode.IsDone)
             {
                 break;
             }
 
-            var nextNode = _currentNode.NextFlow;
-            _currentNode.Exit();
+            var nextNode = CurrentNode.NextFlow;
+            CurrentNode.Exit();
 
-            _currentNode = nextNode;
+            CurrentNode = nextNode;
         }
 
-        IsEnd = _currentNode == null;
+        IsEnd = CurrentNode == null;
     }
 
     internal void SetException()

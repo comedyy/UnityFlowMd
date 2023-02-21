@@ -1,0 +1,15 @@
+ConditionEditorFlowNode #title {
+    background-color: rgba(100, 100, 0, 0.91);
+}
+
+StartEditorFlowNode #title {
+    background-color: rgba(0, 100, 0, 0.91);
+}
+
+OperationEditorFlowNode #title {
+    background-color: rgba(0, 0, 100, 0.91);
+}
+
+EndEditorFlowNode #title {
+    background-color: rgba(100, 0, 0, 0.91);
+}

@@ -7,7 +7,7 @@
         {
             "name": "Unity Editor",
             "type": "unity",
-            "path": "/E:/test/TestFlowFromMd/Library/EditorInstance.json",
+            "path": "/Users/zhangdunyong/work/test/testGraphView/Library/EditorInstance.json",
             "request": "launch"
         },
         {
