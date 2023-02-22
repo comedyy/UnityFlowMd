@@ -13,3 +13,7 @@ OperationEditorFlowNode #title {
 EndEditorFlowNode #title {
     background-color: rgba(100, 0, 0, 0.91);
 }
+
+InputOutputFlowNode #title {
+    background-color: rgba(100, 0, 100, 0.91);
+}

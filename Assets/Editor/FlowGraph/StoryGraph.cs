@@ -13,6 +13,7 @@ public class StoryGraph : EditorWindow
     private string _fileName = "New Narrative";
 
     private StoryGraphView _graphView;
+    public static TextAsset asset;
 
     [MenuItem("Graph/Narrative Graph")]
     public static void CreateGraphViewWindow()
@@ -23,8 +24,7 @@ public class StoryGraph : EditorWindow
 
     private void ConstructGraphView()
     {
-        var x = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/FlowScript_log.md");
-        var flow = new Flow(x.name, x.text);
+        var flow = new Flow(asset.name, asset.text);
 
         _graphView = new StoryGraphView(flow)
         {
