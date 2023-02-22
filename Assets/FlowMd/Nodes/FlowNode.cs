@@ -19,6 +19,7 @@ public abstract class FlowNode
     public string name;
     public string title;
     public FlowNode nextFlow;
+    public bool isPortDirChange;  // output default dir change
     public MethodInfo methodInfo;
     bool asyncMethod;
 
@@ -37,9 +38,14 @@ public abstract class FlowNode
         }
     }
 
-    internal void SetNextFlow(FlowNode next)
+    internal void SetNextFlow(FlowNode next, bool isDirChange)
     {
         nextFlow = next;
+
+        if(!this.isPortDirChange)
+        {
+            this.isPortDirChange = isDirChange;
+        }
     }
 
     public virtual void OnValidate()

@@ -67,6 +67,9 @@ public class StoryGraphView : GraphView
             AddElement(x);
         }
 
+        List<FlowNode> lst = new List<FlowNode>();
+        SetNodePos(flow.Entry, new Vector2(100, 100), lst);
+
         foreach(var x in flow.AllNodes)
         {
             var editorNode = _nodeMap[x];
@@ -91,9 +94,6 @@ public class StoryGraphView : GraphView
             OnNodeEnter(flow.CurrentNode);
         }
 
-        List<FlowNode> lst = new List<FlowNode>();
-        SetNodePos(flow.Entry, new Vector2(100, 100), lst);
-
         // var startNode = GetEntryPointNodeInstance();
         // var endNode = GenExitPointNodeInstance();
 
@@ -115,6 +115,9 @@ public class StoryGraphView : GraphView
         // AddSearchWindow(editorWindow);
     }
 
+    Vector2[] dirsNormal = new Vector2[]{new Vector2(200, 0), new Vector2(0, -200)};
+    Vector2[] dirsRotate = new Vector2[]{new Vector2(0, -200), new Vector2(200, 0)};
+
     private void SetNodePos(FlowNode node, Vector2 pos, List<FlowNode> lst)
     {
         if(node == null) return;
@@ -125,14 +128,17 @@ public class StoryGraphView : GraphView
         editorNode.SetPosition(new Rect(pos, new Vector2(100, 150)));
         lst.Add(node);
 
+        var nodePortDirChange = node.isPortDirChange;
+        var dirs = nodePortDirChange ? dirsRotate : dirsNormal;
+
         // children
         var nextNode = node.nextFlow;
-        SetNodePos(nextNode, pos + new Vector2(200, 0), lst);
+        SetNodePos(nextNode, pos + dirs[0], lst);
 
         if(node is ConditionFlowNode conditionNode)
         {
             var conditonNo = conditionNode.nextFlowNo;
-            SetNodePos(conditonNo, pos + new Vector2(0, -200), lst);
+            SetNodePos(conditonNo, pos + dirs[1], lst);
         }
     }
 

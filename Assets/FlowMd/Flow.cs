@@ -18,7 +18,7 @@ public class Flow
     {
         _title = title;
 
-        string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.None);
+        string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
         if(lines[0] != "```flow" || lines[lines.Length - 1] != "```")
         {
             throw new System.Exception("format error");
@@ -56,7 +56,7 @@ public class Flow
 
     void ParseNode(string line)
     {
-        var x = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.None);
+        var x = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.RemoveEmptyEntries);
 
         Assert.IsTrue(x.Length > 3);
 
@@ -81,43 +81,48 @@ public class Flow
 
     void ParseConnection(string line)
     {
-        var x = line.Split(new string[]{"->"}, StringSplitOptions.None);
-        (var current, var isCurrentConditionNo) = GetNode(x[0]);
+        var x = line.Split(new string[]{"->"}, StringSplitOptions.RemoveEmptyEntries);
+        (var current, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
         for(int i = 1; i < x.Length; i++)
         {
-            (var next, var isNextConditionNo) = GetNode(x[i]);
+            (var next, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
 
             if(isCurrentConditionNo && current is ConditionFlowNode conditionFlow)
             {
-                conditionFlow.SetNoCondition(next);
+                conditionFlow.SetNoCondition(next, isDirChagne);
             }
             else
             {
-                current.SetNextFlow(next);
+                current.SetNextFlow(next, isDirChagne);
             }
 
             current = next;
             isCurrentConditionNo = isNextConditionNo;
+            isDirChagne= nextDirChagne;
         }
     }
 
-    public (FlowNode, bool) GetNode(string context)
+    public (FlowNode, bool, bool) GetNode(string context)
     {
-        var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.None);
+        var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.RemoveEmptyEntries);
         var name = x[0];
         var node = _allNodes.Find(m=>m.name == name);
 
         Assert.IsNotNull(node, $"查找node为空{name}, context = {context}，脚本：{_title}");
-
-        for(int i = 1; i < x.Length; i++)
+        var isNo = false;
+        if(x.Length > 1)
         {
-            if(x[i] == "no")
-            {
-                return (node, true);
-            }
+            isNo = x[1] == "no";    
+        }
+        
+        var isDirChange = false;
+        if(x.Length > 2)
+        {
+            var isDownDir = x[2] == "bottom";
+            isDirChange = isNo ? isDownDir : !isDownDir;
         }
 
-        return (node, false);
+        return (node, isNo, isDirChange);
     }
 
     public FlowNode CurrentNode{get; private set;}

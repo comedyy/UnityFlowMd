@@ -14,6 +14,7 @@ public class EditorNodeFactory
         else if(node is EndFlowNode) editorNode = new EndEditorFlowNode();
         else if(node is OperationFlowNode) editorNode = new OperationEditorFlowNode();
         else if(node is ConditionFlowNode) editorNode = new ConditionEditorFlowNode();
+        else if(node is InputOutputFlowNode) editorNode = new InputOutputEditorlowNode();
         else throw new Exception($"node not implement {node}");
 
         editorNode.Init(node.title, node);
@@ -87,4 +88,11 @@ public class EndEditorFlowNode : FlowEditorNode
     public override int InputNodeCount => 1;
 
     public override int OutNodeCount => 0;
+}
+
+public class InputOutputEditorlowNode : FlowEditorNode
+{
+    public override int InputNodeCount => 1;
+
+    public override int OutNodeCount => 1;
 }

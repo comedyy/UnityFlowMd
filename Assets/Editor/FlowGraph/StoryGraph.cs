@@ -15,15 +15,10 @@ public class StoryGraph : EditorWindow
     private StoryGraphView _graphView;
     public static TextAsset asset;
 
-    [MenuItem("Graph/Narrative Graph")]
-    public static void CreateGraphViewWindow()
-    {
-        var window = GetWindow<StoryGraph>();
-        window.titleContent = new GUIContent("Narrative Graph");
-    }
-
     private void ConstructGraphView()
     {
+        if(asset == null) return;;
+
         var flow = new Flow(asset.name, asset.text);
 
         _graphView = new StoryGraphView(flow)
@@ -112,6 +107,9 @@ public class StoryGraph : EditorWindow
 
     private void OnDisable()
     {
-        rootVisualElement.Remove(_graphView);
+        if(_graphView != null)
+        {
+            rootVisualElement.Remove(_graphView);
+        }
     }
 }
