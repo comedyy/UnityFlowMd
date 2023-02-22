@@ -9,6 +9,7 @@ public static class FlowNodeFactory
     {
         if(nodeType == "start") return new StartFlowNode(name, title, method);
         if(nodeType == "end") return new EndFlowNode(name, title, method);
+        if(nodeType == "inputoutput") return new InputOutputFlowNode(name, title, method);
         if(nodeType == "condition") return new ConditionFlowNode(name, title, method);
         if(nodeType == "operation") return new OperationFlowNode(name, title, method);
         throw new System.Exception($"unknown NodeType {name}");
