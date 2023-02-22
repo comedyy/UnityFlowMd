@@ -8,8 +8,13 @@ public class FlowScript_log
     public static async Task Start()
     {
         Debug.Log("enter Start");
-        await Task.Delay(5000);
+        await Task.Delay(1000);
         Debug.Log("Exit Start");
+    }
+
+    //等待我输入
+    public static void WaitMyEnter(object param) 
+    {
     }
 
     public static async Task Say()

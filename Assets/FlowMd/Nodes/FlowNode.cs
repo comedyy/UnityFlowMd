@@ -57,11 +57,17 @@ public abstract class FlowNode
 
     public bool IsEntered{get; private set;}
     Task _curentTask;
-    public virtual void Enter()
+    public void Enter()
     {
         _curentTask = null;
         IsEntered = true;
+        OnEnterEvent?.Invoke(this);
 
+        OnEnter();
+    }
+
+    public virtual void OnEnter()
+    {
         if(methodInfo == null) return;
 
         if(asyncMethod)
@@ -72,8 +78,6 @@ public abstract class FlowNode
         {
             methodInfo.Invoke(null, null);
         }
-
-        OnEnterEvent?.Invoke(this);
     }
 
     public void Exit()
@@ -83,7 +87,7 @@ public abstract class FlowNode
         OnExitEvent?.Invoke(this);
     }
 
-    public bool IsDone => _curentTask == null || _curentTask.IsCompleted;
+    public virtual bool IsDone => _curentTask == null || _curentTask.IsCompleted;
 
     public static bool GetAsync(MethodInfo info)
     {

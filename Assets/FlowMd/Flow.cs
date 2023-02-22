@@ -158,4 +158,16 @@ public class Flow
     {
         IsEnd = true;
     }
+
+    public void SetParam(object o)
+    {
+        if(CurrentNode != null && CurrentNode is InputOutputFlowNode inputNode)
+        {
+            inputNode.SetInput(o);
+        }
+        else
+        {
+            Debug.LogWarning("输入参数的时候，不在input状态");
+        }
+    }
 }

@@ -8,5 +8,20 @@ public class InputOutputFlowNode : FlowNode
     public InputOutputFlowNode(string name, string title, MethodInfo method) : base(name, title, method)
     {
     }
+
+    bool _isSetParam = false;
+    public override void OnEnter()
+    {
+        _isSetParam = false;
+        Debug.Log("InputOutputFlowNode wait param");
+    }
+
+    public void SetInput(object o)
+    {
+        methodInfo.Invoke(null, new object[]{o});
+        _isSetParam = true;
+    }
+
+    public override bool IsDone => _isSetParam;
 }
 

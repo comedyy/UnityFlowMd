@@ -30,9 +30,8 @@ public class AutoCreateScriptTemplate
             {
                 var split = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.None);
                 var method = split[3];
-                var isCondition = split[1] == "condition";
 
-                GenerateMethod(method, split[2], isCondition, builder);
+                GenerateMethod(method, split[2], split[1], builder);
             }
         }
 
@@ -44,11 +43,15 @@ public class AutoCreateScriptTemplate
         AssetDatabase.Refresh();
     }
 
-    private static void GenerateMethod(string method, string comment, bool isCondition, StringBuilder builder)
+    private static void GenerateMethod(string method, string comment, string nodeType, StringBuilder builder)
     {
-        var retStr = (isCondition ? "bool" : "void");
+        var isCondition = nodeType == "condition";
+        var isInputOutput = nodeType == "inputoutput";
+
+        var retStr = isCondition ? "bool" : "void";
+        var param = isInputOutput ? "object param" : "";
         builder.AppendLine($"   //{comment}");
-        builder.AppendLine($"   public static {retStr} {method}() {{");
+        builder.AppendLine($"   public static {retStr} {method}({param}) {{");
 
         if(isCondition)
         {

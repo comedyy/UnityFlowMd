@@ -6,6 +6,7 @@ public class NewBehaviourScript : MonoBehaviour
 {
     public TextAsset textAsset;
     FlowMgr _flowMgr = new FlowMgr();
+    public bool x;
 
     public Flow Flow { get; set; }
 
@@ -19,5 +20,11 @@ public class NewBehaviourScript : MonoBehaviour
     void Update()
     {
         _flowMgr.Update();
+
+        if(x)
+        {
+            x = false;
+            Flow.SetParam(null);
+        }
     }
 }
