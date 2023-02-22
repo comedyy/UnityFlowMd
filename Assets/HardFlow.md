@@ -1,21 +1,21 @@
 ```flow
-st=>start: 页面加载
-e=>end: End
-op1=>operation: get_hotel_ids
-sub1=>operation: get_proxy
-op3=>operation: save_comment
-op4=>operation: set_sentiment
-op5=>operation: set_record
+st=>start: 页面加载|OnStart
+e=>end: End|OnEnd
+op1=>operation: get_hotel_ids|OnA
+sub1=>operation: get_proxy|OnB
+op3=>operation: save_comment|OnC
+op4=>operation: set_sentiment|OnD
+op5=>operation: set_record|OnE
  
-cond1=>condition: ids_remain空?
-cond2=>condition: proxy_list空?
-cond3=>condition: ids_got空?
-cond4=>condition: 爬取成功??
-cond5=>condition: ids_remain空?
+cond1=>condition: ids_remain空?|XX1
+cond2=>condition: proxy_list空?|XX2
+cond3=>condition: ids_got空?|XX3
+cond4=>condition: 爬取成功??|XX4
+cond5=>condition: ids_remain空?|XX5
  
-io1=>operation: ids-remain
-io2=>operation: proxy_list
-io3=>operation: ids-got
+io1=>operation: ids-remain|XX6
+io2=>operation: proxy_list|XX7
+io3=>operation: ids-got|XX8
  
 st->op1(right)->io1->cond1
 cond1(yes)->sub1->io2->cond2

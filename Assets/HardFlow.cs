@@ -1,31 +1,67 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine;
+public static class HardFlow{
+   // 页面加载
+   public static void OnStart() {
+   }
 
-public class HardFlow
-{
-    public static async Task Start()
-    {
-        Debug.Log("enter Start");
-        await Task.Delay(5000);
-        Debug.Log("Exit Start");
-    }
+   // End
+   public static void OnEnd() {
+   }
 
-    public static async Task Say()
-    {
-        await Task.Delay(2000);
-        Debug.Log("enter say");
-    }
+   // get_hotel_ids
+   public static void OnA() {
+   }
 
-    public static bool IsShit()
-    {
-        Debug.Log("isShit");
-        return Random.value > 0.5f;
-    }
+   // get_proxy
+   public static void OnB() {
+   }
 
-    public static void End()
-    {
-        Debug.Log("End");
-    }
+   // save_comment
+   public static void OnC() {
+   }
+
+   // set_sentiment
+   public static void OnD() {
+   }
+
+   // set_record
+   public static void OnE() {
+   }
+
+   // ids_remain空?
+   public static bool XX1() {
+       return false;
+   }
+
+   // proxy_list空?
+   public static bool XX2() {
+       return false;
+   }
+
+   // ids_got空?
+   public static bool XX3() {
+       return false;
+   }
+
+   // 爬取成功??
+   public static bool XX4() {
+       return false;
+   }
+
+   // ids_remain空?
+   public static bool XX5() {
+       return false;
+   }
+
+   // ids-remain
+   public static void XX6() {
+   }
+
+   // proxy_list
+   public static void XX7() {
+   }
+
+   // ids-got
+   public static void XX8() {
+   }
+
 }
