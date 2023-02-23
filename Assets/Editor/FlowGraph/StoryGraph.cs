@@ -13,21 +13,40 @@ public class StoryGraph : EditorWindow
     private string _fileName = "New Narrative";
 
     private StoryGraphView _graphView;
-    public static TextAsset asset;
 
-    private void ConstructGraphView()
+    public void OpenWithAsset(TextAsset x)
     {
-        if(asset == null) return;;
+        var flow = new Flow(x.name, x.text, "");
+        OpenWithFlow(flow);
+    }
 
-        var flow = new Flow(asset.name, asset.text);
-
+    public void OpenWithFlow(Flow flow)
+    {
         _graphView = new StoryGraphView(flow)
         {
-            name = "Narrative Graph",
+            name = flow.Title,
         };
         _graphView.StretchToParentSize();
         rootVisualElement.Add(_graphView);
+
+        OnOpen();
     }
+
+
+    // private void ConstructGraphView()
+    // {
+    //     if(asset == null) return;;
+
+    //     var flow = new Flow(asset.name, asset.text, "");
+
+    //     _graphView = new StoryGraphView(flow)
+    //     {
+    //         name = "Narrative Graph",
+    //     };
+    //     _graphView.StretchToParentSize();
+    //     rootVisualElement.Add(_graphView);
+
+    // }
 
     private void GenerateToolbar()
     {
@@ -62,10 +81,9 @@ public class StoryGraph : EditorWindow
         // }
     }
 
-    private void OnEnable()
+    private void OnOpen()
     {
-        ConstructGraphView();
-        GenerateToolbar();
+        // GenerateToolbar();
         GenerateMiniMap();
         // GenerateBlackBoard();
     }

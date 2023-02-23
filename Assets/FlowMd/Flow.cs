@@ -14,9 +14,9 @@ public class Flow
     string _title;
     public bool IsEnd{get; private set;}
 
-    public Flow(string title, string mdFile)
+    public Flow(string title, string mdFile, string flowName)
     {
-        _title = title;
+        _title = title + " - " + flowName;
 
         string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
         if(lines[0] != "```flow" || lines[lines.Length - 1] != "```")
@@ -126,6 +126,8 @@ public class Flow
     }
 
     public FlowNode CurrentNode{get; private set;}
+    public string Title => _title;
+
     public void Update()
     {
         if(IsEnd)

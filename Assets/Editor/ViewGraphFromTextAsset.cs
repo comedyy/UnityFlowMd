@@ -18,8 +18,8 @@ public class ViewGraphFromTextAsset
             return;
         }
 
-        StoryGraph.asset = x;
         var window = EditorWindow.GetWindow<StoryGraph>();
         window.titleContent = new GUIContent(x.name);
+        window.OpenWithAsset(x);
     }
 }

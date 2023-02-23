@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FlowMgr
+public class FlowMgr : MonoSingleton<FlowMgr>
 {
     List<Flow> _allFlow = new List<Flow>();
+    public IReadOnlyList<Flow> AllFlow => _allFlow;
 
     bool _lockUpdate = false;
     public void Update()
@@ -33,7 +34,7 @@ public class FlowMgr
         _lockUpdate = false;
     }
 
-    public Flow AddFlow(string title, string context)
+    public Flow AddFlow(TextAsset asset, string name)
     {
         if(_lockUpdate)
         {
@@ -41,7 +42,7 @@ public class FlowMgr
             return null;
         }
 
-        var flow = new Flow(title, context);
+        var flow = new Flow(asset.name, asset.text, name);
         _allFlow.Insert(0, flow);
 
         return flow;

@@ -5,26 +5,31 @@ using UnityEngine;
 public class NewBehaviourScript : MonoBehaviour
 {
     public TextAsset textAsset;
-    FlowMgr _flowMgr = new FlowMgr();
     public bool x;
+    public bool y;
 
     public Flow Flow { get; set; }
 
     // Start is called before the first frame update
     void Start()
     {
-        Flow = _flowMgr.AddFlow(textAsset.name, textAsset.text);
+        Flow = FlowMgr.Instance.AddFlow(textAsset, "newOne");
     }
 
+    int i  = 0;
     // Update is called once per frame
     void Update()
     {
-        _flowMgr.Update();
-
         if(x)
         {
             x = false;
             Flow.SetParam(null);
+        }
+
+        if(y)
+        {
+            y = false;
+            Flow = FlowMgr.Instance.AddFlow(textAsset, (i++).ToString());
         }
     }
 }
