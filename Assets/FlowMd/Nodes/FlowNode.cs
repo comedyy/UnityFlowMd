@@ -22,6 +22,7 @@ public abstract class FlowNode
     public bool isPortDirChange;  // output default dir change
     public MethodInfo methodInfo;
     bool asyncMethod;
+    public object methodInfoScript;
 
     public event Action<FlowNode> OnEnterEvent;
     public event Action<FlowNode> OnExitEvent;
@@ -72,11 +73,11 @@ public abstract class FlowNode
 
         if(asyncMethod)
         {
-            _curentTask = (Task)methodInfo.Invoke(null, null);
+            _curentTask = (Task)methodInfo.Invoke(methodInfoScript, null);
         }
         else
         {
-            methodInfo.Invoke(null, null);
+            methodInfo.Invoke(methodInfoScript, null);
         }
     }
 

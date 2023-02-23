@@ -18,7 +18,7 @@ public class InputOutputFlowNode : FlowNode
 
     public void SetInput(object o)
     {
-        methodInfo.Invoke(null, new object[]{o});
+        methodInfo.Invoke(methodInfoScript, new object[]{o});
         _isSetParam = true;
     }
 

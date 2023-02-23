@@ -13,7 +13,7 @@ public class NewBehaviourScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Flow = FlowMgr.Instance.AddFlow(textAsset, "newOne");
+        // Flow = FlowMgr.Instance.AddFlow(textAsset, "newOne");
     }
 
     int i  = 0;
@@ -30,6 +30,7 @@ public class NewBehaviourScript : MonoBehaviour
         {
             y = false;
             Flow = FlowMgr.Instance.AddFlow(textAsset, (i++).ToString());
+            Flow.Inject(Flow.Title);
         }
     }
 }

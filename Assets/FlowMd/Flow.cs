@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Assertions;
+    
+public sealed class FlowNeedInjectAttribute : Attribute { }
 
 public class Flow
 {
@@ -11,6 +13,7 @@ public class Flow
     List<FlowNode> _allNodes = new List<FlowNode>();
     public IList<FlowNode> AllNodes => _allNodes;
     Type _scriptType;
+    object _scriptObject;
     string _title;
     public bool IsEnd{get; private set;}
 
@@ -52,6 +55,8 @@ public class Flow
         _scriptType = Type.GetType(line);
 
         Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_title}");
+
+        _scriptObject = Activator.CreateInstance(_scriptType, true);
     }
 
     void ParseNode(string line)
@@ -64,13 +69,12 @@ public class Flow
         var nodeType = x[1];
         var title = x[2];
 
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件，脚本：{_title}");
-
         var method = x[3];
-        MethodInfo methodInfo = _scriptType.GetMethod(method, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        MethodInfo methodInfo = _scriptType.GetMethod(method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
         Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_title}");
 
         var node = FlowNodeFactory.Create(nodeType, name, title, methodInfo);
+        node.methodInfoScript = _scriptObject;
         _allNodes.Add(node);
 
         if(node is StartFlowNode)
@@ -170,6 +174,21 @@ public class Flow
         else
         {
             Debug.LogWarning("输入参数的时候，不在input状态");
+        }
+    }
+
+    public void Inject(object o)
+    {
+        var needInjectType = typeof(FlowNeedInjectAttribute);
+        foreach (var f in _scriptType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+            if (!Attribute.IsDefined (f, needInjectType)) {
+                continue;
+            }
+     
+            if (f.FieldType.IsAssignableFrom (o.GetType())) {
+                f.SetValue (_scriptObject, o);
+                break;
+            }
         }
     }
 }

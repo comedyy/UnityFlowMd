@@ -28,7 +28,7 @@ public class ConditionFlowNode : FlowNode
     bool m_Result;
     public override void OnEnter()
     {
-        m_Result = (bool)this.methodInfo.Invoke(null, null);
+        m_Result = (bool)this.methodInfo.Invoke(methodInfoScript, null);
     }
 
     public override FlowNode RunTimeNextFlow => m_Result ? nextFlow : nextFlowNo;

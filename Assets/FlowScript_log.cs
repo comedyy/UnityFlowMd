@@ -5,32 +5,35 @@ using UnityEngine;
 
 public class FlowScript_log
 {
-    public static async Task Start()
+    [FlowNeedInject] string context;
+     string noInject = "noInject";
+
+    public async Task Start()
     {
-        Debug.Log("enter Start");
+        Debug.Log($"enter Start {context}");
         await Task.Delay(1000);
-        Debug.Log("Exit Start");
+        Debug.Log($"Exit Start {context} - {noInject}");
     }
 
     //等待我输入
-    public static void WaitMyEnter(object param) 
+    public void WaitMyEnter(object param) 
     {
     }
 
-    public static async Task Say()
+    public async Task Say()
     {
         await Task.Delay(2000);
-        Debug.Log("enter say");
+        Debug.Log($"enter say  {context}");
     }
 
-    public static bool IsShit()
+    public bool IsShit()
     {
-        Debug.Log("isShit");
+        Debug.Log($"isShit  {context}");
         return Random.value > 0.5f;
     }
 
-    public static void End()
+    public void End()
     {
-        Debug.Log("End");
+        Debug.Log($"End  {context}");
     }
 }
