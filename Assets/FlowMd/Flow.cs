@@ -15,11 +15,13 @@ public class Flow
     Type _scriptType;
     object _scriptObject;
     string _title;
+    string _scriptName;
     public bool IsEnd{get; private set;}
 
     public Flow(string title, string mdFile, string flowName)
     {
         _title = title + " - " + flowName;
+        _scriptName = title;
 
         string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
         if(lines[0] != "```flow" || lines[lines.Length - 1] != "```")
@@ -70,7 +72,8 @@ public class Flow
         var title = x[2];
 
         var method = x[3];
-        MethodInfo methodInfo = _scriptType.GetMethod(method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        method = method.Replace("!", "");
+        MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_title}");
 
         var node = FlowNodeFactory.Create(nodeType, name, title, methodInfo);
