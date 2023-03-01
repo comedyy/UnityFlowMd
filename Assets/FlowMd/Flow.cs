@@ -9,19 +9,93 @@ public sealed class FlowNeedInjectAttribute : Attribute { }
 
 public class Flow
 {
-    public FlowNode Entry{get; private set;}
-    List<FlowNode> _allNodes = new List<FlowNode>();
-    public IList<FlowNode> AllNodes => _allNodes;
     Type _scriptType;
     object _scriptObject;
     string _title;
     string _scriptName;
+    public TextAsset asset{get; private set;}
+
+    public FlowNode Entry{get; private set;}
+    List<FlowNode> _allNodes = new List<FlowNode>();
+
+    public FlowNode CurrentNode{get; private set;}
+
+    internal void SetName(string name)
+    {
+        _title = $"{_scriptName} - {name}";
+    }
+
     public bool IsEnd{get; private set;}
 
-    public Flow(string title, string mdFile, string flowName)
+    // getter
+    public IList<FlowNode> AllNodes => _allNodes;
+    public string Title => _title;
+
+    internal static Flow Instantiate(Flow flowTemplate, string flowName)
     {
+        var flow = new Flow();
+        flow._scriptType = flowTemplate._scriptType;
+        flow._scriptObject = Activator.CreateInstance(flow._scriptType, true);
+        flow._title = $"{flowTemplate._scriptName} - {flowName}";
+        flow._scriptName = flowTemplate._scriptName;
+        flow.asset = flowTemplate.asset;
+
+        flow._allNodes = new List<FlowNode>();
+        foreach(var x in flowTemplate._allNodes)
+        {
+            var cloneNode = x.CloneNode();
+            cloneNode.methodInfoScript = flow._scriptObject;
+            flow._allNodes.Add(cloneNode);
+
+            if(x == flowTemplate.Entry)
+            {
+                flow.Entry = cloneNode;
+            }
+            if(x == flowTemplate.CurrentNode)
+            {
+                flow.CurrentNode = cloneNode;
+            }
+        }
+
+        // node connection
+        for(int i = 0; i < flowTemplate._allNodes.Count; i++)
+        {
+            var x = flowTemplate._allNodes[i];
+            if(x is ConditionFlowNode conditionNode)
+            {
+                var index = flowTemplate._allNodes.IndexOf(conditionNode.nextFlowNo);
+                (flow._allNodes[i] as ConditionFlowNode).SetNoCondition(flow._allNodes[index], conditionNode.isPortDirChange);
+            }
+
+            if(x.nextFlow != null)
+            {
+                var index1 = flowTemplate._allNodes.IndexOf(x.nextFlow);
+                flow._allNodes[i].SetNextFlow(flow._allNodes[index1], x.isPortDirChange);
+            }
+        }
+
+        flow.IsEnd = flowTemplate.IsEnd;
+        return flow;
+    }
+
+    internal void Reset()
+    {
+        IsEnd = false;
+        CurrentNode = Entry;
+    }
+
+    private Flow()
+    {
+
+    }
+
+    public Flow(TextAsset asset, string flowName)
+    {
+        string title = asset.name;
+        string mdFile = asset.text;
         _title = title + " - " + flowName;
         _scriptName = title;
+        this.asset = asset;
 
         string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
         if(lines[0] != "```flow" || lines[lines.Length - 1] != "```")
@@ -131,9 +205,6 @@ public class Flow
 
         return (node, isNo, isDirChange);
     }
-
-    public FlowNode CurrentNode{get; private set;}
-    public string Title => _title;
 
     public void Update()
     {

@@ -94,4 +94,6 @@ public abstract class FlowNode
     {
         return info.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
     }
+
+    public abstract FlowNode CloneNode();
 }

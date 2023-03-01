@@ -16,7 +16,7 @@ public class StoryGraph : EditorWindow
 
     public void OpenWithAsset(TextAsset x)
     {
-        var flow = new Flow(x.name, x.text, "");
+        var flow = new Flow(x, "");
         OpenWithFlow(flow);
     }
 

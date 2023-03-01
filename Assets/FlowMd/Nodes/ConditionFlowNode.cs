@@ -7,7 +7,6 @@ using UnityEngine.Assertions;
 public class ConditionFlowNode : FlowNode
 {
     public FlowNode nextFlowNo;
-    public bool FlowDirChange;
     public ConditionFlowNode(string name, string title, MethodInfo method) : base(name, title, method)
     {
     }
@@ -32,5 +31,11 @@ public class ConditionFlowNode : FlowNode
     }
 
     public override FlowNode RunTimeNextFlow => m_Result ? nextFlow : nextFlowNo;
+
+
+    public override FlowNode CloneNode()
+    {
+        return new ConditionFlowNode(this.name, this.title, this.methodInfo);
+    }
 }
 

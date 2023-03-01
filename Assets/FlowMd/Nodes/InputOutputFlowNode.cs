@@ -23,5 +23,10 @@ public class InputOutputFlowNode : FlowNode
     }
 
     public override bool IsDone => _isSetParam;
+
+    public override FlowNode CloneNode()
+    {
+        return new InputOutputFlowNode(this.name, this.title, this.methodInfo);
+    }
 }
 

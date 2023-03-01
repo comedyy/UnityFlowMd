@@ -7,6 +7,7 @@ public class FlowMgr : MonoSingleton<FlowMgr>
 {
     List<Flow> _allFlow = new List<Flow>();
     public IReadOnlyList<Flow> AllFlow => _allFlow;
+    FlowPool _pool = new FlowPool();
 
     bool _lockUpdate = false;
     public void Update()
@@ -28,7 +29,9 @@ public class FlowMgr : MonoSingleton<FlowMgr>
 
             if(item.IsEnd)
             {
+                var flow = _allFlow[i];
                 _allFlow.RemoveAt(i);
+                _pool.Release(flow);
             }
         }
         _lockUpdate = false;
@@ -42,7 +45,7 @@ public class FlowMgr : MonoSingleton<FlowMgr>
             return null;
         }
 
-        var flow = new Flow(asset.name, asset.text, name);
+        var flow = _pool.GetFlowByAsset(asset, name);
         _allFlow.Insert(0, flow);
 
         return flow;
@@ -57,5 +60,6 @@ public class FlowMgr : MonoSingleton<FlowMgr>
         }
 
         _allFlow.Remove(flow);
+        _pool.Release(flow);
     }
 }
