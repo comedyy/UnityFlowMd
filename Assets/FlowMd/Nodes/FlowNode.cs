@@ -18,11 +18,11 @@ public abstract class FlowNode
 {
     public string name;
     public string title;
-    public FlowNode nextFlow;
     public bool isPortDirChange;  // output default dir change
     public MethodInfo methodInfo;
     bool asyncMethod;
     public object methodInfoScript;
+    public bool Result{get; protected set;}
 
     public event Action<FlowNode> OnEnterEvent;
     public event Action<FlowNode> OnExitEvent;
@@ -37,24 +37,9 @@ public abstract class FlowNode
         {
             this.asyncMethod = GetAsync(methodInfo);
         }
+
+        Result = true;
     }
-
-    internal void SetNextFlow(FlowNode next, bool isDirChange)
-    {
-        nextFlow = next;
-
-        if(!this.isPortDirChange)
-        {
-            this.isPortDirChange = isDirChange;
-        }
-    }
-
-    public virtual void OnValidate()
-    {
-        Assert.IsNotNull(nextFlow, $"节点{name}  【{title}】 不存在下一个节点");
-    }
-
-    public virtual FlowNode RunTimeNextFlow => nextFlow;
 
     public bool IsEntered{get; private set;}
     Task _curentTask;

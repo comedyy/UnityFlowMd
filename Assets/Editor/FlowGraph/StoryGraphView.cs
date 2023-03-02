@@ -67,23 +67,26 @@ public class StoryGraphView : GraphView
             AddElement(x);
         }
 
-        List<FlowNode> lst = new List<FlowNode>();
-        SetNodePos(flow.Entry, new Vector2(100, 100), lst);
+        List<int> lst = new List<int>();
+        SetNodePos(flow, flow.EntryIndex, new Vector2(100, 100), lst);
 
-        foreach(var x in flow.AllNodes)
+        for(int i = 0; i< flow.AllNodes.Count; i++)
         {
+            var x = flow.AllNodes[i];
             var editorNode = _nodeMap[x];
 
-            if(x.RunTimeNextFlow != null)
+            var nextFlow = GetNextFlow(flow, i, true);
+            if(nextFlow != null)
             {
-                var editorNodeNext = _nodeMap[x.nextFlow];
+                var editorNodeNext = _nodeMap[nextFlow];
                 var edge = (editorNode.outputContainer.Children().First() as Port).ConnectTo(editorNodeNext.inputContainer.Children().First() as Port);
                 AddElement(edge);
             }
             
             if(x is ConditionFlowNode conditionFlowNode)
             {
-                var flowNo = _nodeMap[conditionFlowNode.nextFlowNo];
+                var nextFlowIndexNo = GetNextFlow(flow, i, false);
+                var flowNo = _nodeMap[nextFlowIndexNo];
                 var edgeNo = (editorNode.outputContainer.Children().Last() as Port).ConnectTo(flowNo.inputContainer.Children().First() as Port);
                 AddElement(edgeNo);
             }
@@ -115,30 +118,40 @@ public class StoryGraphView : GraphView
         // AddSearchWindow(editorWindow);
     }
 
+    FlowNode GetNextFlow(Flow flow, int index, bool result)
+    {
+        var nextIndex = flow.GetNextNode(index, result);
+        return nextIndex >= 0 ? flow.AllNodes[nextIndex] : null;
+    }
+
     Vector2[] dirsNormal = new Vector2[]{new Vector2(200, 0), new Vector2(0, -200)};
     Vector2[] dirsRotate = new Vector2[]{new Vector2(0, -200), new Vector2(200, 0)};
 
-    private void SetNodePos(FlowNode node, Vector2 pos, List<FlowNode> lst)
+    private void SetNodePos(Flow flow, int nodeIndex, Vector2 pos, List<int> lst)
     {
-        if(node == null) return;
-        if(lst.Contains(node)) return;
+        if(nodeIndex < 0) return;
+        if(lst.Contains(nodeIndex)) return;
 
+        var node = flow.AllNodes[nodeIndex];
         var editorNode = _nodeMap[node];
 
         editorNode.SetPosition(new Rect(pos, new Vector2(100, 150)));
-        lst.Add(node);
+        lst.Add(nodeIndex);
 
         var nodePortDirChange = node.isPortDirChange;
         var dirs = nodePortDirChange ? dirsRotate : dirsNormal;
 
         // children
-        var nextNode = node.nextFlow;
-        SetNodePos(nextNode, pos + dirs[0], lst);
-
-        if(node is ConditionFlowNode conditionNode)
+        var nextNodeIndex = flow.GetNextNode(nodeIndex, true);
+        if(nextNodeIndex >= 0)
         {
-            var conditonNo = conditionNode.nextFlowNo;
-            SetNodePos(conditonNo, pos + dirs[1], lst);
+            SetNodePos(flow, nextNodeIndex, pos + dirs[0], lst);
+        }
+
+        var nextNodeNoIndex = flow.GetNextNode(nodeIndex, false);
+        if(nextNodeNoIndex >= 0)
+        {
+            SetNodePos(flow, nextNodeNoIndex, pos + dirs[1], lst);
         }
     }
 

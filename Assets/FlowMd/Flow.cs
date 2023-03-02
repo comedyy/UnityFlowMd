@@ -15,10 +15,15 @@ public class Flow
     string _scriptName;
     public TextAsset asset{get; private set;}
 
-    public FlowNode Entry{get; private set;}
-    List<FlowNode> _allNodes = new List<FlowNode>();
+    int _currentIndex;
+    int _entryIndex;
 
-    public FlowNode CurrentNode{get; private set;}
+    List<FlowNode> _allNodes = new List<FlowNode>();
+    int[] _allConnection;
+
+    public FlowNode Entry => _allNodes[_entryIndex];
+    public FlowNode CurrentNode => _currentIndex == -1 ? null : _allNodes[_currentIndex];
+
 
     internal void SetName(string name)
     {
@@ -29,7 +34,10 @@ public class Flow
 
     // getter
     public IList<FlowNode> AllNodes => _allNodes;
+    public IList<int> AllConnection => _allConnection;
     public string Title => _title;
+
+    public int EntryIndex => _entryIndex;
 
     internal static Flow Instantiate(Flow flowTemplate, string flowName)
     {
@@ -40,39 +48,17 @@ public class Flow
         flow._scriptName = flowTemplate._scriptName;
         flow.asset = flowTemplate.asset;
 
+        flow._entryIndex = flowTemplate._entryIndex;
+        flow._currentIndex = flowTemplate._currentIndex;
+
         flow._allNodes = new List<FlowNode>();
         foreach(var x in flowTemplate._allNodes)
         {
             var cloneNode = x.CloneNode();
             cloneNode.methodInfoScript = flow._scriptObject;
             flow._allNodes.Add(cloneNode);
-
-            if(x == flowTemplate.Entry)
-            {
-                flow.Entry = cloneNode;
-            }
-            if(x == flowTemplate.CurrentNode)
-            {
-                flow.CurrentNode = cloneNode;
-            }
         }
-
-        // node connection
-        for(int i = 0; i < flowTemplate._allNodes.Count; i++)
-        {
-            var x = flowTemplate._allNodes[i];
-            if(x is ConditionFlowNode conditionNode)
-            {
-                var index = flowTemplate._allNodes.IndexOf(conditionNode.nextFlowNo);
-                (flow._allNodes[i] as ConditionFlowNode).SetNoCondition(flow._allNodes[index], conditionNode.isPortDirChange);
-            }
-
-            if(x.nextFlow != null)
-            {
-                var index1 = flowTemplate._allNodes.IndexOf(x.nextFlow);
-                flow._allNodes[i].SetNextFlow(flow._allNodes[index1], x.isPortDirChange);
-            }
-        }
+        flow._allConnection = flowTemplate._allConnection;
 
         flow.IsEnd = flowTemplate.IsEnd;
         return flow;
@@ -81,7 +67,7 @@ public class Flow
     internal void Reset()
     {
         IsEnd = false;
-        CurrentNode = Entry;
+        _currentIndex = _entryIndex;
     }
 
     private Flow()
@@ -110,20 +96,37 @@ public class Flow
             {
                 ParseNode(line);
             }
-            else if(line.Contains("->"))
+        }
+
+        _allConnection = new int[_allNodes.Count];
+        foreach(var line in lines)
+        {
+            if(line.Contains("->"))
             {
                 ParseConnection(line);
             }
         }
 
-        foreach (var item in _allNodes)
+        for(int i = 0; i < _allNodes.Count; i++)
         {
-            item.OnValidate();
+            var node = _allNodes[i];
+            var connection = _allConnection[i];
+
+            if(node is ConditionFlowNode conditionNode)
+            {
+                Assert.IsTrue(connection / 100 > 0, $"condition节点不存在no节点 {node.title}");
+                Assert.IsTrue(conditionNode.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
+            }
+            
+            if(!(node is EndFlowNode))
+            {
+                Assert.IsTrue(connection % 100 > 0, $"不存在下一个节点 {node.title}");
+            }
         }
 
         Assert.IsNotNull(Entry, $"入口未找到 脚本：{_title}");
 
-        CurrentNode = Entry;
+        _currentIndex = _entryIndex;
     }
 
     private void ParseScriptType(string line)
@@ -156,40 +159,40 @@ public class Flow
 
         if(node is StartFlowNode)
         {
-            Entry = node;
+            _entryIndex = _allNodes.Count - 1;
         }
     }
 
     void ParseConnection(string line)
     {
         var x = line.Split(new string[]{"->"}, StringSplitOptions.RemoveEmptyEntries);
-        (var current, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
+        (var currentIndex, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
         for(int i = 1; i < x.Length; i++)
         {
-            (var next, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
+            (var nextIndex, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
 
-            if(isCurrentConditionNo && current is ConditionFlowNode conditionFlow)
+            if(isCurrentConditionNo && _allNodes[currentIndex] is ConditionFlowNode)
             {
-                conditionFlow.SetNoCondition(next, isDirChagne);
+                _allConnection[currentIndex] += (nextIndex + 1) * 100;
             }
             else
             {
-                current.SetNextFlow(next, isDirChagne);
+                _allConnection[currentIndex] += nextIndex + 1;
             }
 
-            current = next;
+            currentIndex = nextIndex;
             isCurrentConditionNo = isNextConditionNo;
             isDirChagne= nextDirChagne;
         }
     }
 
-    public (FlowNode, bool, bool) GetNode(string context)
+    public (int, bool, bool) GetNode(string context)
     {
         var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.RemoveEmptyEntries);
         var name = x[0];
-        var node = _allNodes.Find(m=>m.name == name);
+        var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
 
-        Assert.IsNotNull(node, $"查找node为空{name}, context = {context}，脚本：{_title}");
+        Assert.IsTrue(nodeIndex >= 0, $"查找node为空{name}, context = {context}，脚本：{_title}");
         var isNo = false;
         if(x.Length > 1)
         {
@@ -203,7 +206,7 @@ public class Flow
             isDirChange = isNo ? isDownDir : !isDownDir;
         }
 
-        return (node, isNo, isDirChange);
+        return (nodeIndex, isNo, isDirChange);
     }
 
     public void Update()
@@ -225,13 +228,24 @@ public class Flow
                 break;
             }
 
-            var nextNode = CurrentNode.RunTimeNextFlow;
             CurrentNode.Exit();
 
-            CurrentNode = nextNode;
+            _currentIndex = GetNextNode(_currentIndex, CurrentNode.Result);
         }
 
         IsEnd = CurrentNode == null;
+    }
+
+    public int GetNextNode(int index, bool result)
+    {
+        if (result)
+        {
+            return _allConnection[index] % 100 - 1;
+        }
+        else
+        {
+            return _allConnection[index] / 100 - 1;
+        }
     }
 
     internal void SetException()

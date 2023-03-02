@@ -9,10 +9,6 @@ public class EndFlowNode : FlowNode
     {
     }
 
-    public override void OnValidate() // override it
-    {
-    }
-
     public override FlowNode CloneNode()
     {
         return new EndFlowNode(this.name, this.title, this.methodInfo);
