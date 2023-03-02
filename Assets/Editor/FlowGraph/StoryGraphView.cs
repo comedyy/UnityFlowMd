@@ -17,10 +17,10 @@ public class StoryGraphView : GraphView
     // public List<ExposedProperty> ExposedProperties { get; private set; } = new List<ExposedProperty>();
     // private NodeSearchWindow _searchWindow;
 
-    Dictionary<FlowNode, FlowEditorNode> _nodeMap = new Dictionary<FlowNode, FlowEditorNode>();
+    Dictionary<FlowNodeAsset, FlowEditorNode> _nodeMap = new Dictionary<FlowNodeAsset, FlowEditorNode>();
     List<FlowEditorNode> AllNodes = new List<FlowEditorNode>();
 
-    void OnNodeEnter(FlowNode node)
+    void OnNodeEnter(FlowNodeAsset node)
     {
         foreach(var x in AllNodes)
         {
@@ -56,10 +56,10 @@ public class StoryGraphView : GraphView
             _nodeMap[x] = editorNode;
             AllNodes.Add(editorNode);
 
-            x.OnExitEvent -= OnNodeExit;
-            x.OnExitEvent += OnNodeExit;
-            x.OnEnterEvent -= OnNodeEnter;
-            x.OnEnterEvent += OnNodeEnter;
+            // x.OnExitEvent -= OnNodeExit;
+            // x.OnExitEvent += OnNodeExit;
+            flow.OnEnterEvent -= OnNodeEnter;
+            flow.OnEnterEvent += OnNodeEnter;
         }
 
         foreach(var x in AllNodes)
@@ -83,7 +83,7 @@ public class StoryGraphView : GraphView
                 AddElement(edge);
             }
             
-            if(x is ConditionFlowNode conditionFlowNode)
+            if(x.nodeType == "condition")
             {
                 var nextFlowIndexNo = GetNextFlow(flow, i, false);
                 var flowNo = _nodeMap[nextFlowIndexNo];
@@ -92,9 +92,9 @@ public class StoryGraphView : GraphView
             }
         }
 
-        if(flow.CurrentNode != null)
+        if(flow.CurrentAsset != null)
         {
-            OnNodeEnter(flow.CurrentNode);
+            OnNodeEnter(flow.CurrentAsset);
         }
 
         // var startNode = GetEntryPointNodeInstance();
@@ -118,10 +118,10 @@ public class StoryGraphView : GraphView
         // AddSearchWindow(editorWindow);
     }
 
-    FlowNode GetNextFlow(Flow flow, int index, bool result)
+    FlowNodeAsset GetNextFlow(Flow flow, int index, bool result)
     {
         var nextIndex = flow.GetNextNode(index, result);
-        return nextIndex >= 0 ? flow.AllNodes[nextIndex] : null;
+        return nextIndex >= 0 ? flow.asset._allNodes[nextIndex] : null;
     }
 
     Vector2[] dirsNormal = new Vector2[]{new Vector2(200, 0), new Vector2(0, -200)};
@@ -138,7 +138,7 @@ public class StoryGraphView : GraphView
         editorNode.SetPosition(new Rect(pos, new Vector2(100, 150)));
         lst.Add(nodeIndex);
 
-        var nodePortDirChange = node.isPortDirChange;
+        var nodePortDirChange = false;
         var dirs = nodePortDirChange ? dirsRotate : dirsNormal;
 
         // children

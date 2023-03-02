@@ -6,68 +6,55 @@ using UnityEngine;
 using UnityEngine.Assertions;
     
 public sealed class FlowNeedInjectAttribute : Attribute { }
+public interface INodeProcessor
+{
+    void Init(object scriptObj, FlowNodeAsset asset);
+    bool Result{get;}
+    void Enter();
+    bool IsDone{get;}
+    void Exit();
+}
 
 public class Flow
 {
-    Type _scriptType;
     object _scriptObject;
-    string _title;
-    string _scriptName;
-    public TextAsset asset{get; private set;}
-
     int _currentIndex;
-    int _entryIndex;
-
-    List<FlowNode> _allNodes = new List<FlowNode>();
-    int[] _allConnection;
-
-    public FlowNode Entry => _allNodes[_entryIndex];
-    public FlowNode CurrentNode => _currentIndex == -1 ? null : _allNodes[_currentIndex];
-
+    public FlowAsset asset{get; private set;}
+    public FlowNodeAsset CurrentAsset => _currentIndex < 0 ? null : asset._allNodes[_currentIndex];
+    string name;
 
     internal void SetName(string name)
     {
-        _title = $"{_scriptName} - {name}";
+        this.name = name;
     }
 
     public bool IsEnd{get; private set;}
 
     // getter
-    public IList<FlowNode> AllNodes => _allNodes;
-    public IList<int> AllConnection => _allConnection;
-    public string Title => _title;
+    public IList<FlowNodeAsset> AllNodes => asset._allNodes;
+    public IList<int> AllConnection => asset._allConnection;
+    public string Title => asset._scriptName + " " + name;
 
-    public int EntryIndex => _entryIndex;
+    public int EntryIndex => asset._entryIndex;
 
-    internal static Flow Instantiate(Flow flowTemplate, string flowName)
+    public Action<FlowNodeAsset> OnEnterEvent { get; set; }
+
+    public static Flow Instantiate(FlowAsset flowTemplate, string flowName)
     {
         var flow = new Flow();
-        flow._scriptType = flowTemplate._scriptType;
-        flow._scriptObject = Activator.CreateInstance(flow._scriptType, true);
-        flow._title = $"{flowTemplate._scriptName} - {flowName}";
-        flow._scriptName = flowTemplate._scriptName;
-        flow.asset = flowTemplate.asset;
+        flow.asset = flowTemplate;
+        flow._scriptObject = Activator.CreateInstance(flowTemplate._scriptType, true);
+        flow._currentIndex = flowTemplate._entryIndex;
+        flow.IsEnd = false;
+        flow.SetName(flowName);
 
-        flow._entryIndex = flowTemplate._entryIndex;
-        flow._currentIndex = flowTemplate._currentIndex;
-
-        flow._allNodes = new List<FlowNode>();
-        foreach(var x in flowTemplate._allNodes)
-        {
-            var cloneNode = x.CloneNode();
-            cloneNode.methodInfoScript = flow._scriptObject;
-            flow._allNodes.Add(cloneNode);
-        }
-        flow._allConnection = flowTemplate._allConnection;
-
-        flow.IsEnd = flowTemplate.IsEnd;
         return flow;
     }
 
     internal void Reset()
     {
         IsEnd = false;
-        _currentIndex = _entryIndex;
+        _currentIndex = asset._entryIndex;
     }
 
     private Flow()
@@ -75,140 +62,7 @@ public class Flow
 
     }
 
-    public Flow(TextAsset asset, string flowName)
-    {
-        string title = asset.name;
-        string mdFile = asset.text;
-        _title = title + " - " + flowName;
-        _scriptName = title;
-        this.asset = asset;
-
-        string[] lines = mdFile.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
-        if(lines[0] != "```flow" || lines[lines.Length - 1] != "```")
-        {
-            throw new System.Exception("format error");
-        }
-
-        ParseScriptType(title);
-        foreach (var line in lines)
-        {
-            if(line.Contains("=>"))
-            {
-                ParseNode(line);
-            }
-        }
-
-        _allConnection = new int[_allNodes.Count];
-        foreach(var line in lines)
-        {
-            if(line.Contains("->"))
-            {
-                ParseConnection(line);
-            }
-        }
-
-        for(int i = 0; i < _allNodes.Count; i++)
-        {
-            var node = _allNodes[i];
-            var connection = _allConnection[i];
-
-            if(node is ConditionFlowNode conditionNode)
-            {
-                Assert.IsTrue(connection / 100 > 0, $"condition节点不存在no节点 {node.title}");
-                Assert.IsTrue(conditionNode.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
-            }
-            
-            if(!(node is EndFlowNode))
-            {
-                Assert.IsTrue(connection % 100 > 0, $"不存在下一个节点 {node.title}");
-            }
-        }
-
-        Assert.IsNotNull(Entry, $"入口未找到 脚本：{_title}");
-
-        _currentIndex = _entryIndex;
-    }
-
-    private void ParseScriptType(string line)
-    {
-        _scriptType = Type.GetType(line);
-
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_title}");
-
-        _scriptObject = Activator.CreateInstance(_scriptType, true);
-    }
-
-    void ParseNode(string line)
-    {
-        var x = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.RemoveEmptyEntries);
-
-        Assert.IsTrue(x.Length > 3);
-
-        var name = x[0];
-        var nodeType = x[1];
-        var title = x[2];
-
-        var method = x[3];
-        method = method.Replace("!", "");
-        MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_title}");
-
-        var node = FlowNodeFactory.Create(nodeType, name, title, methodInfo);
-        node.methodInfoScript = _scriptObject;
-        _allNodes.Add(node);
-
-        if(node is StartFlowNode)
-        {
-            _entryIndex = _allNodes.Count - 1;
-        }
-    }
-
-    void ParseConnection(string line)
-    {
-        var x = line.Split(new string[]{"->"}, StringSplitOptions.RemoveEmptyEntries);
-        (var currentIndex, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
-        for(int i = 1; i < x.Length; i++)
-        {
-            (var nextIndex, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
-
-            if(isCurrentConditionNo && _allNodes[currentIndex] is ConditionFlowNode)
-            {
-                _allConnection[currentIndex] += (nextIndex + 1) * 100;
-            }
-            else
-            {
-                _allConnection[currentIndex] += nextIndex + 1;
-            }
-
-            currentIndex = nextIndex;
-            isCurrentConditionNo = isNextConditionNo;
-            isDirChagne= nextDirChagne;
-        }
-    }
-
-    public (int, bool, bool) GetNode(string context)
-    {
-        var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.RemoveEmptyEntries);
-        var name = x[0];
-        var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
-
-        Assert.IsTrue(nodeIndex >= 0, $"查找node为空{name}, context = {context}，脚本：{_title}");
-        var isNo = false;
-        if(x.Length > 1)
-        {
-            isNo = x[1] == "no";    
-        }
-        
-        var isDirChange = false;
-        if(x.Length > 2)
-        {
-            var isDownDir = x[2] == "bottom";
-            isDirChange = isNo ? isDownDir : !isDownDir;
-        }
-
-        return (nodeIndex, isNo, isDirChange);
-    }
-
+    INodeProcessor _processor;
     public void Update()
     {
         if(IsEnd)
@@ -216,35 +70,45 @@ public class Flow
             return;
         }
 
-        while(CurrentNode != null)
+        if(_processor == null)
         {
-            if(!CurrentNode.IsEntered)
-            {
-                CurrentNode.Enter();
-            }
+            _processor = ProcessorPool.Get(_scriptObject, CurrentAsset);
+            _processor.Enter();
+            OnEnterEvent?.Invoke(CurrentAsset);
+        }
 
-            if(!CurrentNode.IsDone)
+        while(_processor != null)
+        {
+            if(!_processor.IsDone)
             {
                 break;
             }
 
-            CurrentNode.Exit();
+            _processor.Exit();
 
-            _currentIndex = GetNextNode(_currentIndex, CurrentNode.Result);
+            _currentIndex = GetNextNode(_currentIndex, _processor.Result);
+            _processor = ProcessorPool.Get(_scriptObject, CurrentAsset);
+
+            if(_processor != null)
+            {
+                _processor.Enter();
+                OnEnterEvent?.Invoke(CurrentAsset);
+            }
         }
 
-        IsEnd = CurrentNode == null;
+        IsEnd = _processor == null;
     }
+
 
     public int GetNextNode(int index, bool result)
     {
         if (result)
         {
-            return _allConnection[index] % 100 - 1;
+            return asset._allConnection[index] % 100 - 1;
         }
         else
         {
-            return _allConnection[index] / 100 - 1;
+            return asset._allConnection[index] / 100 - 1;
         }
     }
 
@@ -255,9 +119,9 @@ public class Flow
 
     public void SetParam(object o)
     {
-        if(CurrentNode != null && CurrentNode is InputOutputFlowNode inputNode)
+        if(_processor != null && _processor is InputoutputFlowProcessor inputoutput)
         {
-            inputNode.SetInput(o);
+            inputoutput.SetInput(o);
         }
         else
         {
@@ -268,7 +132,7 @@ public class Flow
     public void Inject(object o)
     {
         var needInjectType = typeof(FlowNeedInjectAttribute);
-        foreach (var f in _scriptType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+        foreach (var f in asset._scriptType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
             if (!Attribute.IsDefined (f, needInjectType)) {
                 continue;
             }

@@ -7,17 +7,17 @@ using UnityEngine.UIElements;
 
 public class EditorNodeFactory
 {
-    public static FlowEditorNode Create(FlowNode node)
+    public static FlowEditorNode Create(FlowNodeAsset node)
     {
         FlowEditorNode editorNode = null;
-        if(node is StartFlowNode) editorNode = new StartEditorFlowNode();
-        else if(node is EndFlowNode) editorNode = new EndEditorFlowNode();
-        else if(node is OperationFlowNode) editorNode = new OperationEditorFlowNode();
-        else if(node is ConditionFlowNode) editorNode = new ConditionEditorFlowNode();
-        else if(node is InputOutputFlowNode) editorNode = new InputOutputEditorlowNode();
+        if(node.nodeType == "start") editorNode = new StartEditorFlowNode();
+        else if(node.nodeType == "end") editorNode = new EndEditorFlowNode();
+        else if(node.nodeType == "operation") editorNode = new OperationEditorFlowNode();
+        else if(node.nodeType == "condition") editorNode = new ConditionEditorFlowNode();
+        else if(node.nodeType == "inputoutput") editorNode = new InputOutputEditorlowNode();
         else throw new Exception($"node not implement {node}");
 
-        editorNode.Init(node.title, node);
+        editorNode.Init(node.title);
 
         return editorNode;
     }
@@ -28,7 +28,7 @@ public abstract class FlowEditorNode : Node
     public abstract int InputNodeCount{get;}
     public abstract int OutNodeCount{get;}
 
-    public void Init(string title, FlowNode node)
+    public void Init(string title)
     {
         styleSheets.Add(Resources.Load<StyleSheet>("Node"));
         this.title = title;

@@ -16,7 +16,8 @@ public class StoryGraph : EditorWindow
 
     public void OpenWithAsset(TextAsset x)
     {
-        var flow = new Flow(x, "");
+        var flowAsset = new FlowAsset(x);
+        var flow = Flow.Instantiate(flowAsset, "");
         OpenWithFlow(flow);
     }
 
