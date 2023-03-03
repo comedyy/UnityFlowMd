@@ -95,8 +95,8 @@ public class AutoCreateScriptTemplate
 
     private static CreateMethodInfo GenerateMethodStruct(string method, string comment, string nodeType)
     {
-        var isCondition = nodeType == "condition";
-        var isInputOutput = nodeType == "inputoutput";
+        var isCondition = nodeType == FlowDefine.CONDITION_NODE_STR;
+        var isInputOutput = nodeType == FlowDefine.INPUTOUTPUT_NODE_STR;
         var needAsync = method.Contains("!");
         method = method.Replace("!", "");
 

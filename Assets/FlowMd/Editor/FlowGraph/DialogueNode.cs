@@ -10,11 +10,11 @@ public class EditorNodeFactory
     public static FlowEditorNode Create(FlowNodeAsset node)
     {
         FlowEditorNode editorNode = null;
-        if(node.nodeType == "start") editorNode = new StartEditorFlowNode();
-        else if(node.nodeType == "end") editorNode = new EndEditorFlowNode();
-        else if(node.nodeType == "operation") editorNode = new OperationEditorFlowNode();
-        else if(node.nodeType == "condition") editorNode = new ConditionEditorFlowNode();
-        else if(node.nodeType == "inputoutput") editorNode = new InputOutputEditorlowNode();
+        if(node.nodeType == FlowDefine.START_NODE_STR) editorNode = new StartEditorFlowNode();
+        else if(node.nodeType == FlowDefine.END_NODE_STR) editorNode = new EndEditorFlowNode();
+        else if(node.nodeType == FlowDefine.OPERATION_NODE_STR) editorNode = new OperationEditorFlowNode();
+        else if(node.nodeType == FlowDefine.CONDITION_NODE_STR) editorNode = new ConditionEditorFlowNode();
+        else if(node.nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) editorNode = new InputOutputEditorlowNode();
         else throw new Exception($"node not implement {node}");
 
         editorNode.Init(node.title);

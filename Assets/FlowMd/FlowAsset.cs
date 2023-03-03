@@ -50,13 +50,13 @@ public class FlowAsset
             var node = _allNodes[i];
             var connection = _allConnection[i];
 
-            if(node.nodeType == "condition")
+            if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
             {
                 Assert.IsTrue(connection / 100 > 0, $"condition节点不存在no节点 {node.title}");
                 Assert.IsTrue(node.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
             }
             
-            if(node.nodeType != "end")
+            if(node.nodeType != FlowDefine.END_NODE_STR)
             {
                 Assert.IsTrue(connection % 100 > 0, $"不存在下一个节点 {node.title}");
             }
@@ -89,7 +89,7 @@ public class FlowAsset
         var node = new FlowNodeAsset(nodeType, name, title, methodInfo);
         _allNodes.Add(node);
 
-        if(node.nodeType == "start")
+        if(node.nodeType == FlowDefine.START_NODE_STR)
         {
             _entryIndex = _allNodes.Count - 1;
         }
@@ -103,7 +103,7 @@ public class FlowAsset
         {
             (var nextIndex, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
 
-            if(isCurrentConditionNo && _allNodes[currentIndex].nodeType == "condition")
+            if(isCurrentConditionNo && _allNodes[currentIndex].nodeType == FlowDefine.CONDITION_NODE_STR)
             {
                 _allConnection[currentIndex] += (nextIndex + 1) * 100;
             }

@@ -35,7 +35,7 @@ public class RuntimeFlowMgrEditorWindow : EditorWindow
         EditorGUILayout.LabelField(x.Title);
         if(GUILayout.Button("打开"))
         {
-            var window = EditorWindow.GetWindow<StoryGraph>();
+            var window = EditorWindow.GetWindow<FlowGraph>();
             window.titleContent = new GUIContent(x.Title);
             window.OpenWithFlow(x);
         }

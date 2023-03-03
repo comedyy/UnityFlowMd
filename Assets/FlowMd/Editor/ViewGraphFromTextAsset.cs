@@ -18,7 +18,7 @@ public class ViewGraphFromTextAsset
             return;
         }
 
-        var window = EditorWindow.GetWindow<StoryGraph>();
+        var window = EditorWindow.GetWindow<FlowGraph>();
         window.titleContent = new GUIContent(x.name);
         window.OpenWithAsset(x);
     }

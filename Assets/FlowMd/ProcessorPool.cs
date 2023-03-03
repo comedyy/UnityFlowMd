@@ -12,9 +12,14 @@ public static class ProcessorPool
         var nodeType = asset.nodeType;
         INodeProcessor processor;
 
-        if (nodeType == "start" || nodeType == "end" || nodeType == "operation") processor = new NormalFlowProcessor();
-        else if(nodeType == "inputoutput") processor = new InputoutputFlowProcessor();
-        else if(nodeType == "condition") processor = new ConditionFlowProcessor();
+        if (nodeType == FlowDefine.START_NODE_STR 
+            || nodeType == FlowDefine.END_NODE_STR 
+            || nodeType == FlowDefine.OPERATION_NODE_STR)
+        {
+            processor = new NormalFlowProcessor();
+        } 
+        else if(nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) processor = new InputoutputFlowProcessor();
+        else if(nodeType == FlowDefine.CONDITION_NODE_STR) processor = new ConditionFlowProcessor();
         else throw new System.Exception($"unknown NodeType {nodeType}");
 
         processor.Init(scriptObj, asset);
