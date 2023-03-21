@@ -11,7 +11,7 @@ public class FlowPool
     {
         if(!_dicAssetFlowTemplate.TryGetValue(asset, out var flowTemplate))
         {
-            flowTemplate = new FlowAsset(asset);
+            flowTemplate = FlowAsset.Create(asset);
             _dicAssetFlowTemplate.Add(asset, flowTemplate);
         }
 
