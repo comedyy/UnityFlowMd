@@ -9,7 +9,7 @@ public sealed class FlowNeedInjectAttribute : Attribute { }
 public interface INodeProcessor
 {
     void Init(object scriptObj, FlowNodeAsset asset);
-    bool Result{get;}
+    string Result{get;}
     void Enter();
     bool IsDone{get;}
     void Exit();
@@ -32,7 +32,6 @@ public class Flow
 
     // getter
     public IList<FlowNodeAsset> AllNodes => asset._allNodes;
-    public IList<int> AllConnection => asset._allConnection;
     public string Title => asset._scriptName + " " + name;
 
     public int EntryIndex => asset._entryIndex;
@@ -100,16 +99,17 @@ public class Flow
     }
 
 
-    public int GetNextNode(int index, bool result)
+    public int GetNextNode(int index, string result)
     {
-        if (result)
+        if(index < 0 || index >= asset._allConnection.Length) throw new Exception($"out of range {index}");
+
+        var portList = asset._allConnection[index].ports;
+        for(int i = 0; i < portList.Count; i++)
         {
-            return asset._allConnection[index] % 100 - 1;
+            if(portList[i].portName == result) return portList[i].nextIndex;
         }
-        else
-        {
-            return asset._allConnection[index] / 100 - 1;
-        }
+
+        return -1;
     }
 
     internal void SetException()

@@ -17,7 +17,7 @@ public class FlowParserFlow : IParser
     public int _entryIndex;
 
     public List<FlowNodeAsset> _allNodes;
-    public int[] _allConnection;
+    public ConnectionsInfo[] _allConnection;
 
     void CleanUp()
     {
@@ -52,29 +52,19 @@ public class FlowParserFlow : IParser
             }
         }
 
-        _allConnection = new int[_allNodes.Count];
+        _allConnection = new ConnectionsInfo[_allNodes.Count];
+        for(int i = 0; i < _allConnection.Length; i++)
+        {
+            _allConnection[i] = new ConnectionsInfo()
+            {
+                ports = new List<PortInfo>()
+            };
+        }
         foreach(var line in lines)
         {
             if(line.Contains("->"))
             {
                 ParseConnection(line);
-            }
-        }
-
-        for(int i = 0; i < _allNodes.Count; i++)
-        {
-            var node = _allNodes[i];
-            var connection = _allConnection[i];
-
-            if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
-            {
-                Assert.IsTrue(connection / 100 > 0, $"condition节点不存在no节点 {node.title}");
-                Assert.IsTrue(node.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
-            }
-            
-            if(node.nodeType != FlowDefine.END_NODE_STR)
-            {
-                Assert.IsTrue(connection % 100 > 0, $"不存在下一个节点 {node.title}");
             }
         }
 
@@ -121,46 +111,38 @@ public class FlowParserFlow : IParser
     void ParseConnection(string line)
     {
         var x = line.Split(new string[]{"->"}, StringSplitOptions.RemoveEmptyEntries);
-        (var currentIndex, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
+        (var currentIndex, var isCurrentConditionNo) = GetNode(x[0]);
         for(int i = 1; i < x.Length; i++)
         {
-            (var nextIndex, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
+            (var nextIndex, var isNextConditionNo) = GetNode(x[i]);
+            if(_allConnection[currentIndex].ports.Exists(m=>m.portName == isCurrentConditionNo))
+            {
+                throw new Exception($"exist samePort {line}");
+            }
 
-            if(isCurrentConditionNo && _allNodes[currentIndex].nodeType == FlowDefine.CONDITION_NODE_STR)
-            {
-                _allConnection[currentIndex] += (nextIndex + 1) * 100;
-            }
-            else
-            {
-                _allConnection[currentIndex] += nextIndex + 1;
-            }
+            _allConnection[currentIndex].ports.Add(new PortInfo(){
+                portName = isCurrentConditionNo,
+                nextIndex = nextIndex
+            });
 
             currentIndex = nextIndex;
             isCurrentConditionNo = isNextConditionNo;
-            isDirChagne= nextDirChagne;
         }
     }
 
-    public (int, bool, bool) GetNode(string context)
+    public (int, string) GetNode(string context)
     {
         var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.RemoveEmptyEntries);
         var name = x[0];
         var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
 
         Assert.IsTrue(nodeIndex >= 0, $"查找node为空{name}, context = {context}，脚本：{_scriptName}");
-        var isNo = false;
-        if(x.Length > 1)
+        var isNo = FlowDefine.PORT_DEFULT;
+        if(x.Length > 1 && x[1] == "no")
         {
-            isNo = x[1] == "no";    
+            isNo = FlowDefine.CONDITION_NO;
         }
         
-        var isDirChange = false;
-        if(x.Length > 2)
-        {
-            var isDownDir = x[2] == "bottom";
-            isDirChange = isNo ? isDownDir : !isDownDir;
-        }
-
-        return (nodeIndex, isNo, isDirChange);
+        return (nodeIndex, isNo);
     }
 }

@@ -9,4 +9,8 @@ public class FlowDefine
     public const string OPERATION_NODE_STR = "operation";
     public const string CONDITION_NODE_STR = "condition";
     public const string INPUTOUTPUT_NODE_STR = "inputoutput";
+
+
+    public const string CONDITION_NO = "NO";
+    public const string PORT_DEFULT = "DEFAULT";
 }

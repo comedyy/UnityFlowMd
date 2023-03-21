@@ -12,7 +12,7 @@ public class FlowParserMermaid : IParser
     public int _entryIndex;
 
     public List<FlowNodeAsset> _allNodes;
-    public int[] _allConnection;
+    public ConnectionsInfo[] _allConnection;
 
     void CleanUp()
     {
@@ -44,7 +44,14 @@ public class FlowParserMermaid : IParser
             ParseNode(line);
         }
 
-        _allConnection = new int[_allNodes.Count];
+        _allConnection = new ConnectionsInfo[_allNodes.Count];
+        for(int i = 0; i < _allConnection.Length; i++)
+        {
+            _allConnection[i] = new ConnectionsInfo()
+            {
+                ports = new List<PortInfo>()
+            };
+        }
         foreach(var line in lines)
         {
             if(line.Contains("-->"))
@@ -53,24 +60,6 @@ public class FlowParserMermaid : IParser
             }
         }
 
-        for(int i = 0; i < _allNodes.Count; i++)
-        {
-            var node = _allNodes[i];
-            var connection = _allConnection[i];
-
-            if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
-            {
-                Assert.IsTrue(connection / 100 > 0, $"condition节点不存在no节点 {node.title}");
-                Assert.IsTrue(node.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
-            }
-            
-            if(node.nodeType != FlowDefine.END_NODE_STR)
-            {
-                Assert.IsTrue(connection % 100 > 0, $"不存在下一个节点 {node.title}");
-            }
-        }
-
-        Assert.IsTrue(_entryIndex >= 0, $"入口未找到 脚本：{_scriptName}");
         return new FlowAsset(){
             _scriptType = _scriptType,
             _scriptName = _scriptName,
@@ -83,7 +72,7 @@ public class FlowParserMermaid : IParser
     private void ParseScriptType(string line)
     {
         _scriptType = Type.GetType(line);
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
+        // Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
     }
 
     void ParseNode(string line)
@@ -98,11 +87,15 @@ public class FlowParserMermaid : IParser
         var name = x[0];
         var title = x[1];
         var method = x[0];
-        var nodeType = GetNodeType(line.Replace(name, "").Replace(title, "").Trim());
+        var nodeType = GetNodeType(line.Substring(name.Length, line.Length - name.Length).Replace(title, "").Trim());
 
-        MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_scriptName}");
-
+        MethodInfo methodInfo = null;
+        if(_scriptType != null)
+        {
+            methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_scriptName}");
+        }
+        
         var node = new FlowNodeAsset(nodeType, name, title, methodInfo);
         _allNodes.Add(node);
 
@@ -112,62 +105,55 @@ public class FlowParserMermaid : IParser
         }
     }
 
-    private string GetNodeType(string v)
+    public static string GetNodeType(string v)
     {
-        return v switch
-        {
-            "()" => FlowDefine.START_NODE_STR,
-            "[]" => FlowDefine.OPERATION_NODE_STR,
-            "{}" => FlowDefine.CONDITION_NODE_STR,
-            "(())" => FlowDefine.OPERATION_NODE_STR,
-            "([])" => FlowDefine.END_NODE_STR,
-            _ => throw new Exception($"GetNodeTypeError {v}")
-        };
+        if(v == "()") return FlowDefine.START_NODE_STR;
+        else if(v == "[]") return FlowDefine.OPERATION_NODE_STR;
+        else if(v == "{}") return FlowDefine.CONDITION_NODE_STR;
+        else if(v == "(())") return FlowDefine.INPUTOUTPUT_NODE_STR;
+        else if(v == "([])") return FlowDefine.END_NODE_STR;
+        else throw new Exception($"GetNodeTypeError {v}");
     }
 
     void ParseConnection(string line)
     {
         var x = line.Split(new string[]{"-->"}, StringSplitOptions.RemoveEmptyEntries);
-        (var currentIndex, var isCurrentConditionNo, var isDirChagne) = GetNode(x[0]);
+        (var currentIndex, var _) = GetNode(x[0]);
         for(int i = 1; i < x.Length; i++)
         {
-            (var nextIndex, var isNextConditionNo, var nextDirChagne) = GetNode(x[i]);
+            (var nextIndex, var portName) = GetNode(x[i]);
+            if(_allConnection[currentIndex].ports.Exists(m=>m.portName == portName))
+            {
+                throw new Exception($"exist samePort {line}");
+            }
 
-            if(isCurrentConditionNo && _allNodes[currentIndex].nodeType == FlowDefine.CONDITION_NODE_STR)
-            {
-                _allConnection[currentIndex] += (nextIndex + 1) * 100;
-            }
-            else
-            {
-                _allConnection[currentIndex] += nextIndex + 1;
-            }
+            _allConnection[currentIndex].ports.Add(new PortInfo(){
+                portName = portName,
+                nextIndex = nextIndex
+            });
 
             currentIndex = nextIndex;
-            isCurrentConditionNo = isNextConditionNo;
-            isDirChagne= nextDirChagne;
         }
     }
 
-    public (int, bool, bool) GetNode(string context)
+    public (int, string) GetNode(string context)
     {
-        var x = context.Split(new string[]{"(", ",", ")"}, StringSplitOptions.RemoveEmptyEntries);
-        var name = x[0];
-        var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
-
-        Assert.IsTrue(nodeIndex >= 0, $"查找node为空{name}, context = {context}，脚本：{_scriptName}");
-        var isNo = false;
-        if(x.Length > 1)
+        var x = context.Split(new string[]{"|"}, StringSplitOptions.RemoveEmptyEntries);
+        if(x.Length == 1)
         {
-            isNo = x[1] == "no";    
+            var name = x[0].Trim();
+            var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
+            return (nodeIndex, FlowDefine.PORT_DEFULT);
         }
-        
-        var isDirChange = false;
-        if(x.Length > 2)
+        else if(x.Length == 2)
         {
-            var isDownDir = x[2] == "bottom";
-            isDirChange = isNo ? isDownDir : !isDownDir;
+            var name = x[1].Trim();
+            var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
+            return (nodeIndex, x[0]);
         }
-
-        return (nodeIndex, isNo, isDirChange);
+        else
+        {
+            throw new Exception($"GetNodeError {context}");
+        }
     }
 }

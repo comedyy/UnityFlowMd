@@ -38,6 +38,16 @@ public class AutoCreateScriptTemplate
 
                 lst.Add(GenerateMethodStruct(method, split[2], split[1]));
             }
+            else
+            {
+                var split = line.Split(new string[]{"{", "(", "[", "}", "]", ")"}, StringSplitOptions.RemoveEmptyEntries);
+                if(split.Length == 2)
+                {
+                    var method = split[0];
+                    var nodeType = FlowParserMermaid.GetNodeType(line.Substring(method.Length, line.Length - method.Length).Replace(split[1], "").Trim());
+                    lst.Add(GenerateMethodStruct(method, split[1], nodeType));
+                }
+            }
         }
 
         var name = x.name;

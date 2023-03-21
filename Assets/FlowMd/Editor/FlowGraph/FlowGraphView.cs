@@ -66,7 +66,7 @@ public class FlowGraphView : GraphView
             var x = flow.AllNodes[i];
             var editorNode = _nodeMap[x];
 
-            var nextFlow = GetNextFlow(flow, i, true);
+            var nextFlow = GetNextFlow(flow, i, FlowDefine.PORT_DEFULT);
             if(nextFlow != null)
             {
                 var editorNodeNext = _nodeMap[nextFlow];
@@ -76,7 +76,7 @@ public class FlowGraphView : GraphView
             
             if(x.nodeType == FlowDefine.CONDITION_NODE_STR)
             {
-                var nextFlowIndexNo = GetNextFlow(flow, i, false);
+                var nextFlowIndexNo = GetNextFlow(flow, i, FlowDefine.CONDITION_NO);
                 var flowNo = _nodeMap[nextFlowIndexNo];
                 var edgeNo = (editorNode.outputContainer.Children().Last() as Port).ConnectTo(flowNo.inputContainer.Children().First() as Port);
                 AddElement(edgeNo);
@@ -89,7 +89,7 @@ public class FlowGraphView : GraphView
         }
     }
 
-    FlowNodeAsset GetNextFlow(Flow flow, int index, bool result)
+    FlowNodeAsset GetNextFlow(Flow flow, int index, string result)
     {
         var nextIndex = flow.GetNextNode(index, result);
         return nextIndex >= 0 ? flow.asset._allNodes[nextIndex] : null;
@@ -113,13 +113,13 @@ public class FlowGraphView : GraphView
         var dirs = nodePortDirChange ? dirsRotate : dirsNormal;
 
         // children
-        var nextNodeIndex = flow.GetNextNode(nodeIndex, true);
+        var nextNodeIndex = flow.GetNextNode(nodeIndex, FlowDefine.PORT_DEFULT);
         if(nextNodeIndex >= 0)
         {
             SetNodePos(flow, nextNodeIndex, pos + dirs[0], lst);
         }
 
-        var nextNodeNoIndex = flow.GetNextNode(nodeIndex, false);
+        var nextNodeNoIndex = flow.GetNextNode(nodeIndex, FlowDefine.CONDITION_NO);
         if(nextNodeNoIndex >= 0)
         {
             SetNodePos(flow, nextNodeNoIndex, pos + dirs[1], lst);

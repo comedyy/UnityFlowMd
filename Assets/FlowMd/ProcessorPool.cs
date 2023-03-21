@@ -34,7 +34,7 @@ public class NormalFlowProcessor : INodeProcessor
     FlowNodeAsset asset;
     Task _curentTask;
 
-    public bool Result => true;
+    public string Result => FlowDefine.PORT_DEFULT;
     public bool IsDone => _curentTask == null || _curentTask.IsCompleted;
 
     public void Enter()
@@ -63,10 +63,6 @@ public class NormalFlowProcessor : INodeProcessor
         this.asset = null;
         this._curentTask = null;
     }
-
-    public void SetInput(object o)
-    {
-    }
 }
 
 public class ConditionFlowProcessor : INodeProcessor
@@ -75,7 +71,7 @@ public class ConditionFlowProcessor : INodeProcessor
     FlowNodeAsset asset;
 
     public bool IsDone => true;
-    public bool Result{get; private set;}
+    public string Result{get; private set;}
 
     public void Init(object methodInfoScript, FlowNodeAsset asset)
     {
@@ -85,17 +81,13 @@ public class ConditionFlowProcessor : INodeProcessor
 
     public void Enter()
     {
-        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null);
+        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? FlowDefine.PORT_DEFULT : FlowDefine.CONDITION_NO;
     }
 
     public void Exit()
     {
         this.methodInfoScript = null;
         this.asset = null;
-    }
-
-    public void SetInput(object o)
-    {
     }
 }
 
@@ -104,7 +96,7 @@ public class InputoutputFlowProcessor : INodeProcessor
     object methodInfoScript;
     FlowNodeAsset asset;
 
-    public bool Result => true;
+    public string Result{get; private set;}
     public bool IsDone { get; private set; }
 
     public void Init(object scriptObj, FlowNodeAsset asset)
@@ -127,6 +119,7 @@ public class InputoutputFlowProcessor : INodeProcessor
     public void SetInput(object o)
     {
         asset.methodInfo.Invoke(methodInfoScript, new object[]{o});
+        Result = (string)o;
         IsDone = true;
     }
 }
