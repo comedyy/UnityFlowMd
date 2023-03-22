@@ -85,7 +85,7 @@ public class ConditionFlowProcessor : INodeProcessor
 
     public void Enter()
     {
-        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? PortNameConst.PORT_DEFULT : PortNameConst.CONDITION_NO;
+        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? PortNameConst.CONDITION_YES : PortNameConst.CONDITION_NO;
     }
 
     public void Dispose()

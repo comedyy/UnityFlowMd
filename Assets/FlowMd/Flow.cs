@@ -105,12 +105,19 @@ public class Flow
         if(index < 0 || index >= asset._allConnection.Length) throw new Exception($"out of range {index}");
 
         var portList = asset._allConnection[index].ports;
+
+        // END
+        if(portList.Count == 0)
+        {
+            return -1;
+        }
+
         for(int i = 0; i < portList.Count; i++)
         {
             if(portList[i].portName == result) return portList[i].nextIndex;
         }
 
-        return -1;
+        throw new Exception($"not find port {result} node:{asset._allNodes[index].title}");
     }
 
     internal void SetException()
