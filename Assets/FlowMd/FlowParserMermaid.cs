@@ -110,7 +110,7 @@ public class FlowParserMermaid : IParser
             (var nextIndex, var portName) = GetNode(x[i]);
             if(_allConnection[currentIndex].ports.Exists(m=>m.portName == portName))
             {
-                throw new Exception($"exist samePort {line}");
+                throw new Exception($"exist samePort {line} {portName}");
             }
 
             _allConnection[currentIndex].ports.Add(new PortInfo(){
@@ -124,12 +124,12 @@ public class FlowParserMermaid : IParser
 
     public (int, string) GetNode(string context)
     {
-        var x = context.Split(new string[]{"|"}, StringSplitOptions.RemoveEmptyEntries);
+        var x = context.Trim().Split(new string[]{"|"}, StringSplitOptions.RemoveEmptyEntries);
         if(x.Length == 1)
         {
             var name = x[0].Trim();
             var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
-            return (nodeIndex, FlowDefine.PORT_DEFULT);
+            return (nodeIndex, PortNameConst.PORT_DEFULT);
         }
         else if(x.Length == 2)
         {
@@ -139,7 +139,7 @@ public class FlowParserMermaid : IParser
         }
         else
         {
-            throw new Exception($"GetNodeError {context}");
+            throw new Exception($"GetNodeError {context} {x.Length} {string.Join(",", x)}");
         }
     }
 }

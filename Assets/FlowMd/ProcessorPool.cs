@@ -34,7 +34,7 @@ public class NormalFlowProcessor : INodeProcessor
     FlowNodeAsset asset;
     Task _curentTask;
 
-    public string Result => FlowDefine.PORT_DEFULT;
+    public string Result => PortNameConst.PORT_DEFULT;
     public bool IsDone => _curentTask == null || _curentTask.IsCompleted;
 
     public void Enter()
@@ -85,7 +85,7 @@ public class ConditionFlowProcessor : INodeProcessor
 
     public void Enter()
     {
-        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? FlowDefine.PORT_DEFULT : FlowDefine.CONDITION_NO;
+        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? PortNameConst.PORT_DEFULT : PortNameConst.CONDITION_NO;
     }
 
     public void Dispose()

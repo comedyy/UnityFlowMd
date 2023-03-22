@@ -50,13 +50,14 @@ public class FlowAsset
 
             if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
             {
-                Assert.IsTrue(connection.ports.Exists(m=>m.portName == FlowDefine.CONDITION_NO), $"condition没有NO节点 {node.title}");
+                Assert.IsTrue(connection.ports.Exists(m=>m.portName == PortNameConst.CONDITION_NO), $"condition没有NO节点 {node.title}");
+                Assert.IsTrue(connection.ports.Exists(m=>m.portName == PortNameConst.CONDITION_YES), $"condition没有NO节点 {node.title}");
                 // Assert.IsTrue(node.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
             }
             
-            if(node.nodeType != FlowDefine.END_NODE_STR)
+            if(node.nodeType != FlowDefine.END_NODE_STR && node.nodeType != FlowDefine.CONDITION_NODE_STR)
             {
-                Assert.IsTrue(connection.ports.Exists(m=>m.portName == FlowDefine.PORT_DEFULT), $"不存在下一个节点 {node.title}");
+                Assert.IsTrue(connection.ports.Exists(m=>m.portName == PortNameConst.PORT_DEFULT), $"不存在下一个节点 {node.title}");
             }
         }
 

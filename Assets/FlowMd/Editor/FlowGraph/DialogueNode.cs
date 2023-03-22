@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 public class EditorNodeFactory
 {
-    public static FlowEditorNode Create(FlowNodeAsset node)
+    public static FlowEditorNode Create(FlowNodeAsset node, ConnectionsInfo info)
     {
         FlowEditorNode editorNode = null;
         if(node.nodeType == FlowDefine.START_NODE_STR) editorNode = new StartEditorFlowNode();
@@ -17,38 +17,35 @@ public class EditorNodeFactory
         else if(node.nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) editorNode = new InputOutputEditorlowNode();
         else throw new Exception($"node not implement {node}");
 
-        editorNode.Init(node.title);
+        editorNode.Init(node.title, info);
 
         return editorNode;
     }
 }
 
-public abstract class FlowEditorNode : Node
+public class FlowEditorNode : Node
 {
-    public abstract int InputNodeCount{get;}
-    public abstract int OutNodeCount{get;}
-
-    public void Init(string title)
+    public void Init(string title, ConnectionsInfo info)
     {
         styleSheets.Add(Resources.Load<StyleSheet>("Node"));
         this.title = title;
 
         // Port
-        for(int i = 0; i < InputNodeCount; i++)
+        var inputPort = this is StartEditorFlowNode ? 0 : 1;
+        for(int i = 0; i < inputPort; i++)
         {
             var portInput = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
             portInput.portName = "";
             inputContainer.Add(portInput);
         }
 
-        for(int i = 0; i < OutNodeCount; i++)
+        for(int i = 0; i < info.ports.Count; i++)
         {
             var portOutputYes = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
             portOutputYes.portName = "";
             outputContainer.Add(portOutputYes);
 
-            if(OutNodeCount == 2 && i == 0) portOutputYes.portName = "Yes";
-            if(OutNodeCount == 2 && i == 1) portOutputYes.portName = "No";
+            portOutputYes.portName = info.ports[i].portName;
         }
 
         // capabilities &= ~Capabilities.Movable;
@@ -64,35 +61,22 @@ public abstract class FlowEditorNode : Node
 
 public class ConditionEditorFlowNode : FlowEditorNode
 {
-    public override int InputNodeCount => 1;
-
-    public override int OutNodeCount => 2;
 }
 
 public class StartEditorFlowNode : FlowEditorNode
 {
-    public override int InputNodeCount => 0;
-
-    public override int OutNodeCount => 1;
+    
 }
 
 public class OperationEditorFlowNode : FlowEditorNode
 {
-    public override int InputNodeCount => 1;
-
-    public override int OutNodeCount => 1;
+    
 }
 
 public class EndEditorFlowNode : FlowEditorNode
 {
-    public override int InputNodeCount => 1;
-
-    public override int OutNodeCount => 0;
 }
 
 public class InputOutputEditorlowNode : FlowEditorNode
 {
-    public override int InputNodeCount => 1;
-
-    public override int OutNodeCount => 1;
 }
