@@ -28,26 +28,10 @@ public class AutoCreateScriptTemplate
         }
 
         List<CreateMethodInfo> lst = new List<CreateMethodInfo>();
-        string[] lines = x.text.Split(new string[]{"\r\n", "\n"}, StringSplitOptions.None);
-        foreach (var line in lines)
+        FlowAsset asset = FlowAsset.Create(x, false);
+        foreach (var item in asset._allNodes)
         {
-            if(line.Contains("=>"))
-            {
-                var split = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.None);
-                var method = split[3];
-
-                lst.Add(GenerateMethodStruct(method, split[2], split[1]));
-            }
-            else
-            {
-                var split = line.Split(new string[]{"{", "(", "[", "}", "]", ")"}, StringSplitOptions.RemoveEmptyEntries);
-                if(split.Length == 2)
-                {
-                    var method = split[0];
-                    var nodeType = FlowParserMermaid.GetNodeType(line.Substring(method.Length, line.Length - method.Length).Replace(split[1], "").Trim());
-                    lst.Add(GenerateMethodStruct(method, split[1], nodeType));
-                }
-            }
+            lst.Add(GenerateMethodStruct(item.methodName, item.title, item.nodeType, item.isAsyncInMd));
         }
 
         var name = x.name;
@@ -103,16 +87,14 @@ public class AutoCreateScriptTemplate
         builder.AppendLine($"   {retStr} {method}({param});\n");
     }
 
-    private static CreateMethodInfo GenerateMethodStruct(string method, string comment, string nodeType)
+    private static CreateMethodInfo GenerateMethodStruct(string method, string comment, string nodeType, bool isAsync)
     {
         var isCondition = nodeType == FlowDefine.CONDITION_NODE_STR;
         var isInputOutput = nodeType == FlowDefine.INPUTOUTPUT_NODE_STR;
-        var needAsync = method.Contains("!");
-        method = method.Replace("!", "");
 
         return new CreateMethodInfo(){
             methodName = method,
-            isAsync = needAsync,
+            isAsync = isAsync,
             isCondition = isCondition,
             isInputOutput = isInputOutput,
             comment = comment

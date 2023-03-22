@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 public class Mermaid : I_Mermaid {
    //Hard
-   void I_Mermaid.A() {
+   async Task I_Mermaid.A() {
    }
 
    //Round

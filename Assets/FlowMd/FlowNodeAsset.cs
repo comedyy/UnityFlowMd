@@ -10,15 +10,19 @@ public class FlowNodeAsset
     public string name;
     public string title;
     public string methodName;
+    public bool isAsyncInMd;
+
+
     public MethodInfo methodInfo;
     public bool asyncMethod;
 
-    public FlowNodeAsset(string nodeType, string name, string title, string method)
+    public FlowNodeAsset(string nodeType, string name, string title, string method, bool isAsyncInMd)
     {
         this.nodeType = nodeType;
         this.title = title;
         this.name = name;
         this.methodName = method;
+        this.isAsyncInMd = isAsyncInMd;
     }
 
     public void Init(MethodInfo info)

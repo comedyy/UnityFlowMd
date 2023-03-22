@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 public interface I_Mermaid {
    //Hard
-   void A();
+   Task A();
 
    //Round
    void B();

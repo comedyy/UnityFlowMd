@@ -88,7 +88,7 @@ public class FlowParserFlow : IParser
         var title = x[2];
         var method = x[3].Replace("!", "");
 
-        var node = new FlowNodeAsset(nodeType, name, title, method);
+        var node = new FlowNodeAsset(nodeType, name, title, method, method != x[3]);
         _allNodes.Add(node);
 
         if(node.nodeType == FlowDefine.START_NODE_STR)

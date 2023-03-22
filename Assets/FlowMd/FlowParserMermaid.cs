@@ -82,7 +82,7 @@ public class FlowParserMermaid : IParser
         var method = x[0].Replace("!", "");
         var nodeType = GetNodeType(line.Substring(name.Length, line.Length - name.Length).Replace(title, "").Trim());
         
-        var node = new FlowNodeAsset(nodeType, name, title, method);
+        var node = new FlowNodeAsset(nodeType, name, title, method, method != x[0]);
         _allNodes.Add(node);
 
         if(node.nodeType == FlowDefine.START_NODE_STR)
