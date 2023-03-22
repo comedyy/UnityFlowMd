@@ -34,3 +34,11 @@ public interface I_Mermaid {
    void G();
 
 }
+public class HConst {
+   public string _DEFAULT="DEFAULT";
+   public string _111="111";
+   public string _122="122";
+   public string _133="133";
+   public string _144="144";
+   public string _155="155";
+}

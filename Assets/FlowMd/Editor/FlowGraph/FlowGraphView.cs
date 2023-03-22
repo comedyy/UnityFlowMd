@@ -76,22 +76,6 @@ public class FlowGraphView : GraphView
                 var edge = (editorNode.outputContainer.ElementAt(j) as Port).ConnectTo(editorNodeNext.inputContainer.Children().First() as Port);
                 AddElement(edge);
             }
-
-            // var nextFlow = GetNextFlow(flow, i, PortNameConst.PORT_DEFULT);
-            // if(nextFlow != null)
-            // {
-            //     var editorNodeNext = _nodeMap[nextFlow];
-            //     var edge = (editorNode.outputContainer.Children().First() as Port).ConnectTo(editorNodeNext.inputContainer.Children().First() as Port);
-            //     AddElement(edge);
-            // }
-            
-            // if(x.nodeType == FlowDefine.CONDITION_NODE_STR)
-            // {
-            //     var nextFlowIndexNo = GetNextFlow(flow, i, PortNameConst.CONDITION_NO);
-            //     var flowNo = _nodeMap[nextFlowIndexNo];
-            //     var edgeNo = (editorNode.outputContainer.Children().Last() as Port).ConnectTo(flowNo.inputContainer.Children().First() as Port);
-            //     AddElement(edgeNo);
-            // }
         }
 
         if(flow.CurrentAsset != null)
@@ -106,8 +90,6 @@ public class FlowGraphView : GraphView
         return nextIndex >= 0 ? flow.asset._allNodes[nextIndex] : null;
     }
 
-    Vector2[] dirsNormal = new Vector2[]{new Vector2(200, 0), new Vector2(0, -200)};
-
     private void SetNodePos(Flow flow, int nodeIndex, Vector2 pos, List<int> lst)
     {
         if(nodeIndex < 0) return;
@@ -118,8 +100,6 @@ public class FlowGraphView : GraphView
 
         editorNode.SetPosition(new Rect(pos, new Vector2(100, 150)));
         lst.Add(nodeIndex);
-
-        var dirs = dirsNormal;
 
         var ports = flow.asset._allConnection[nodeIndex].ports;
         var segmentCount = (ports.Count - 1) / 2f;
@@ -132,17 +112,5 @@ public class FlowGraphView : GraphView
             SetNodePos(flow, nextNodeIndex, pos + diff, lst);
         }
 
-        // // children
-        // var nextNodeIndex = flow.GetNextNode(nodeIndex, FlowDefine.PORT_DEFULT);
-        // if(nextNodeIndex >= 0)
-        // {
-        //     SetNodePos(flow, nextNodeIndex, pos + dirs[0], lst);
-        // }
-
-        // var nextNodeNoIndex = flow.GetNextNode(nodeIndex, FlowDefine.CONDITION_NO);
-        // if(nextNodeNoIndex >= 0)
-        // {
-        //     SetNodePos(flow, nextNodeNoIndex, pos + dirs[1], lst);
-        // }
     }
 }

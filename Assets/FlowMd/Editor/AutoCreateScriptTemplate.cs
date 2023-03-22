@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -13,6 +14,8 @@ struct CreateMethodInfo
     public bool isAsync;
     public bool isInputOutput;
     public string comment;
+
+    public string[] allPortNames;
 }
 
 public class AutoCreateScriptTemplate
@@ -29,9 +32,11 @@ public class AutoCreateScriptTemplate
 
         List<CreateMethodInfo> lst = new List<CreateMethodInfo>();
         FlowAsset asset = FlowAsset.Create(x, false);
-        foreach (var item in asset._allNodes)
+        for(int i = 0; i < asset._allNodes.Count; i++)
         {
-            lst.Add(GenerateMethodStruct(item.methodName, item.title, item.nodeType, item.isAsyncInMd));
+            var item = asset._allNodes[i];
+            var connection = asset._allConnection[i];
+            lst.Add(GenerateMethodStruct(item.methodName, item.title, item.nodeType, item.isAsyncInMd, connection));
         }
 
         var name = x.name;
@@ -64,13 +69,30 @@ public class AutoCreateScriptTemplate
         {
             GenerateInterface(line, builder);
         }
-
         builder.AppendLine($"}}");
+
+        // generate inputpoutput string
+        foreach (var line in lst)
+        {
+            GererateInputOutputString(line, builder);
+        }
 
         path = Application.dataPath + "/../" + AssetDatabase.GetAssetPath(x);
         path =  Path.GetDirectoryName(path) + $"/I_{name}.cs";
         File.WriteAllText(path, builder.ToString());
         AssetDatabase.Refresh();
+    }
+
+    private static void GererateInputOutputString(CreateMethodInfo line, StringBuilder builder)
+    {
+        if(!line.isInputOutput) return;
+
+        builder.AppendLine($"public class {line.methodName}Const {{");
+        foreach (var item in line.allPortNames)
+        {
+            builder.AppendLine($"   public string _{item}=\"{item}\";");
+        }
+        builder.AppendLine($"}}");
     }
 
     private static void GenerateInterface(CreateMethodInfo line, StringBuilder builder)
@@ -89,7 +111,7 @@ public class AutoCreateScriptTemplate
         builder.AppendLine($"   {retStr} {method}({param});\n");
     }
 
-    private static CreateMethodInfo GenerateMethodStruct(string method, string comment, string nodeType, bool isAsync)
+    private static CreateMethodInfo GenerateMethodStruct(string method, string comment, string nodeType, bool isAsync, ConnectionsInfo info)
     {
         var isCondition = nodeType == FlowDefine.CONDITION_NODE_STR;
         var isInputOutput = nodeType == FlowDefine.INPUTOUTPUT_NODE_STR;
@@ -99,7 +121,8 @@ public class AutoCreateScriptTemplate
             isAsync = isAsync,
             isCondition = isCondition,
             isInputOutput = isInputOutput,
-            comment = comment
+            comment = comment,
+            allPortNames = info.ports.Select(m=>m.portName).ToArray()
         };
     }
 
