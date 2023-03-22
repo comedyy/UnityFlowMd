@@ -29,7 +29,7 @@ public class FlowAsset
     static FlowParserFlow s_FlowParser = new FlowParserFlow();
     static FlowParserMermaid s_MermaidParser = new FlowParserMermaid();
 
-    public static FlowAsset Create(TextAsset asset)
+    public static FlowAsset Create(TextAsset asset, bool needInit = true)
     {
         IParser parser;
         if (asset.text.StartsWith("```mermaid"))
@@ -61,6 +61,33 @@ public class FlowAsset
         }
 
         Assert.IsTrue(flow._entryIndex >= 0, $"入口未找到 脚本：{flow._scriptName}");
+        
+        if(needInit)
+        {
+            flow.Init();
+        }
+
         return flow;
+    }
+
+    private void Init()
+    {
+        ParseScriptType(_scriptName);
+
+        foreach (var item in _allNodes)
+        {
+            MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+ item.methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            
+            Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{item.methodName}，脚本：{_scriptName}");
+
+            item.Init(methodInfo);
+        }
+    }
+
+    
+    private void ParseScriptType(string line)
+    {
+        _scriptType = Type.GetType(line);
+        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
     }
 }

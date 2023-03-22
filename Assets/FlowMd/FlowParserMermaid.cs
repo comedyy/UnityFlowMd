@@ -38,7 +38,6 @@ public class FlowParserMermaid : IParser
             throw new System.Exception("format error");
         }
 
-        ParseScriptType(title);
         foreach (var line in lines)
         {
             ParseNode(line);
@@ -69,12 +68,6 @@ public class FlowParserMermaid : IParser
         };
     }
 
-    private void ParseScriptType(string line)
-    {
-        _scriptType = Type.GetType(line);
-        // Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
-    }
-
     void ParseNode(string line)
     {
         var x = line.Split(new string[]{"{", "(", "[", "}", "]", ")"}, StringSplitOptions.RemoveEmptyEntries);
@@ -86,17 +79,10 @@ public class FlowParserMermaid : IParser
 
         var name = x[0];
         var title = x[1];
-        var method = x[0];
+        var method = x[0].Replace("!", "");
         var nodeType = GetNodeType(line.Substring(name.Length, line.Length - name.Length).Replace(title, "").Trim());
-
-        MethodInfo methodInfo = null;
-        if(_scriptType != null)
-        {
-            methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_scriptName}");
-        }
         
-        var node = new FlowNodeAsset(nodeType, name, title, methodInfo);
+        var node = new FlowNodeAsset(nodeType, name, title, method);
         _allNodes.Add(node);
 
         if(node.nodeType == FlowDefine.START_NODE_STR)

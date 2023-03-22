@@ -43,7 +43,6 @@ public class FlowParserFlow : IParser
             throw new System.Exception("format error");
         }
 
-        ParseScriptType(title);
         foreach (var line in lines)
         {
             if(line.Contains("=>"))
@@ -78,12 +77,6 @@ public class FlowParserFlow : IParser
         };
     }
 
-    private void ParseScriptType(string line)
-    {
-        _scriptType = Type.GetType(line);
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
-    }
-
     void ParseNode(string line)
     {
         var x = line.Split(new string[]{"=>", ":", "|"}, StringSplitOptions.RemoveEmptyEntries);
@@ -93,13 +86,9 @@ public class FlowParserFlow : IParser
         var name = x[0];
         var nodeType = x[1];
         var title = x[2];
+        var method = x[3].Replace("!", "");
 
-        var method = x[3];
-        method = method.Replace("!", "");
-        MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{method}，脚本：{_scriptName}");
-
-        var node = new FlowNodeAsset(nodeType, name, title, methodInfo);
+        var node = new FlowNodeAsset(nodeType, name, title, method);
         _allNodes.Add(node);
 
         if(node.nodeType == FlowDefine.START_NODE_STR)
