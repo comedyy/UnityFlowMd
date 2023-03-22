@@ -131,7 +131,7 @@ public class FlowParserFlow : IParser
         {
             isNo = FlowDefine.CONDITION_NO;
         }
-        
+
         return (nodeIndex, isNo);
     }
 }

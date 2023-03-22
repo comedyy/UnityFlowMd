@@ -8,7 +8,7 @@ D[Result 1]
 E[Result 2]
 G([End])
 
-A! --> B --> C --> D
+A! --> B --> C -->|YES|D
 C -->|NO| E-->H-->G
 D -->G
 ```

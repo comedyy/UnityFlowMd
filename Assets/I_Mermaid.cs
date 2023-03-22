@@ -9,9 +9,6 @@ public interface I_Mermaid {
    //Condition
    bool C();
 
-   //inputoutput
-   void H(object param);
-
    //Result 1
    void D();
 

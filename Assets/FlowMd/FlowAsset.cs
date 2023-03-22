@@ -50,7 +50,7 @@ public class FlowAsset
 
             if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
             {
-                Assert.IsTrue(connection.ports.Exists(m=>m.portName == FlowDefine.CONDITION_NO), $"condition没有No节点 {node.title}");
+                Assert.IsTrue(connection.ports.Exists(m=>m.portName == FlowDefine.CONDITION_NO), $"condition没有NO节点 {node.title}");
                 // Assert.IsTrue(node.methodInfo.ReturnType == typeof(bool), $"condition节点返回值不是bool {node.title}");
             }
             
@@ -76,6 +76,8 @@ public class FlowAsset
 
         foreach (var item in _allNodes)
         {
+            if(item.nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) continue;
+
             MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+ item.methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             
             Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{item.methodName}，脚本：{_scriptName}");

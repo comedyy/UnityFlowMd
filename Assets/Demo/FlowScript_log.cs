@@ -12,10 +12,6 @@ public class FlowScript_log : I_FlowScript_log {
         Debug.Log($"Exit Start {context} - {noInject}");
    }
 
-   //等待我输入
-   void I_FlowScript_log.WaitMyEnter(object param) {
-   }
-
    // 群友发言
    async Task I_FlowScript_log.Say() {
                await Task.Delay(2000);

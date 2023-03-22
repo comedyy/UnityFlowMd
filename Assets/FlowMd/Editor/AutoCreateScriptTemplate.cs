@@ -81,6 +81,8 @@ public class AutoCreateScriptTemplate
         var method = line.methodName;
         var comment = line.comment;
 
+        if(isInputOutput) return;
+
         var retStr = isCondition ? "bool" : (needAsync ? "Task" : "void");
         var param = isInputOutput ? "object param" : "";
         builder.AppendLine($"   //{comment}");
@@ -108,6 +110,8 @@ public class AutoCreateScriptTemplate
         var needAsync = info.isAsync;
         var method = info.methodName;
         var comment = info.comment;
+
+        if(isInputOutput) return; // input output 不需要函数
 
         var retStr = isCondition ? "bool" : (needAsync ? "async Task" : "void");
         var param = isInputOutput ? "object param" : "";

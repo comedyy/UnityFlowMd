@@ -3,9 +3,6 @@ public interface I_FlowScript_log {
    // 群聊开始
    Task Start();
 
-   //等待我输入
-   void WaitMyEnter(object param);
-
    // 群友发言
    Task Say();
 

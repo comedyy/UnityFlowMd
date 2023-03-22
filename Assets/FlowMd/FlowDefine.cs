@@ -12,5 +12,6 @@ public class FlowDefine
 
 
     public const string CONDITION_NO = "NO";
+    public const string CONDITION_YES = "YES";
     public const string PORT_DEFULT = "DEFAULT";
 }

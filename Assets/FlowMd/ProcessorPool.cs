@@ -59,9 +59,13 @@ public class NormalFlowProcessor : INodeProcessor
 
     public void Exit()
     {
+        this._curentTask = null;
+    }
+
+    public void Dispose()
+    {
         this.methodInfoScript = null;
         this.asset = null;
-        this._curentTask = null;
     }
 }
 
@@ -84,10 +88,14 @@ public class ConditionFlowProcessor : INodeProcessor
         Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? FlowDefine.PORT_DEFULT : FlowDefine.CONDITION_NO;
     }
 
-    public void Exit()
+    public void Dispose()
     {
         this.methodInfoScript = null;
         this.asset = null;
+    }
+    
+    public void Exit()
+    {
     }
 }
 
@@ -110,7 +118,7 @@ public class InputoutputFlowProcessor : INodeProcessor
         IsDone = false;
     }
 
-    public void Exit()
+    public void Dispose()
     {
         this.methodInfoScript = null;
         this.asset = null;
@@ -118,8 +126,11 @@ public class InputoutputFlowProcessor : INodeProcessor
 
     public void SetInput(object o)
     {
-        asset.methodInfo.Invoke(methodInfoScript, new object[]{o});
         Result = (string)o;
         IsDone = true;
+    }
+
+    public void Exit()
+    {
     }
 }

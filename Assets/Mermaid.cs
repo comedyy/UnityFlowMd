@@ -13,10 +13,6 @@ public class Mermaid : I_Mermaid {
        return false;
    }
 
-   //inputoutput
-   void I_Mermaid.H(object param) {
-   }
-
    //Result 1
    void I_Mermaid.D() {
    }

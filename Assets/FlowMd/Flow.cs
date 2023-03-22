@@ -9,10 +9,11 @@ public sealed class FlowNeedInjectAttribute : Attribute { }
 public interface INodeProcessor
 {
     void Init(object scriptObj, FlowNodeAsset asset);
-    string Result{get;}
+    void Dispose();
     void Enter();
-    bool IsDone{get;}
     void Exit();
+    string Result{get;}
+    bool IsDone{get;}
 }
 
 public class Flow
