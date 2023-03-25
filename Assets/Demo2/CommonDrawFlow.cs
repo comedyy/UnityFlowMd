@@ -20,10 +20,6 @@ public class CommonDrawFlow : I_CommonDrawFlow {
    void I_CommonDrawFlow.OnLoadNextPic() {
    }
 
-   // 等待输入
-   void I_CommonDrawFlow.WaitForInput(object param) {
-   }
-
    // 输入为画画正确
    bool I_CommonDrawFlow.CheckRightInput() {
        return false;
@@ -64,4 +60,7 @@ public class CommonDrawFlow : I_CommonDrawFlow {
    void I_CommonDrawFlow.OnPlaySkipEffect() {
    }
 
+    public void CleanUp()
+    {
+    }
 }

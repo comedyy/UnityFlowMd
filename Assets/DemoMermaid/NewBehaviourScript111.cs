@@ -11,7 +11,7 @@ public class NewBehaviourScript111 : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        flow = FlowMgr.Instance.AddFlow(asset, "xxx");
+        flow = FlowMgr.Instance.AddFlow<Mermaid>(asset, "xxx");
         flow.Inject(this);
     }
 

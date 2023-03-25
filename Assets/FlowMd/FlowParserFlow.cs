@@ -126,10 +126,18 @@ public class FlowParserFlow : IParser
         var nodeIndex = _allNodes.FindIndex(m=>m.name == name);
 
         Assert.IsTrue(nodeIndex >= 0, $"查找node为空{name}, context = {context}，脚本：{_scriptName}");
+        var node = _allNodes[nodeIndex];
         var isNo = PortNameConst.PORT_DEFULT;
-        if(x.Length > 1 && x[1] == "no")
+        if(node.nodeType == FlowDefine.CONDITION_NODE_STR)
         {
-            isNo = PortNameConst.CONDITION_NO;
+            if((x.Length > 1 && x[1] == "no") || x[0] == "no")
+            {
+                isNo = PortNameConst.CONDITION_NO;
+            }
+            else
+            {
+                isNo = PortNameConst.CONDITION_YES;
+            }
         }
 
         return (nodeIndex, isNo);

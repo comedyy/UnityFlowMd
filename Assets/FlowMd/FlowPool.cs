@@ -7,11 +7,11 @@ public class FlowPool
     Dictionary<TextAsset, FlowAsset> _dicAssetFlowTemplate = new Dictionary<TextAsset, FlowAsset>();
     Dictionary<FlowAsset, Queue<Flow>> _dicCachedFlow = new Dictionary<FlowAsset, Queue<Flow>>();
 
-    public Flow GetFlowByAsset(TextAsset asset, string name)
+    public Flow GetFlowByAsset<T>(TextAsset asset, string name)
     {
         if(!_dicAssetFlowTemplate.TryGetValue(asset, out var flowTemplate))
         {
-            flowTemplate = FlowAsset.Create(asset);
+            flowTemplate = FlowAsset.Create<T>(asset);
             _dicAssetFlowTemplate.Add(asset, flowTemplate);
         }
 
@@ -23,7 +23,7 @@ public class FlowPool
         }
 
 
-        var flow = Flow.Instantiate(flowTemplate, name);
+        var flow = Flow<T>.Instantiate(flowTemplate, name);
         return flow;
     }
 
@@ -36,7 +36,6 @@ public class FlowPool
             _dicCachedFlow.Add(asset, queue);
         }
 
-        flow.Reset();
         queue.Enqueue(flow);
     }
 }

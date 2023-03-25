@@ -2,34 +2,110 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
+
+public interface ICleanUp
+{
+    void CleanUp();
+}
+
+public struct FlowNodeContext
+{
+    public UniTask task;
+    public string result;
+    public bool isEntered;
+}
     
 public sealed class FlowNeedInjectAttribute : Attribute { }
 public interface INodeProcessor
 {
-    void Init(object scriptObj, FlowNodeAsset asset);
-    void Dispose();
-    void Enter();
-    void Exit();
-    string Result{get;}
-    bool IsDone{get;}
+    void Enter<T>(T scriptObj, FlowNodeAsset asset, ref FlowNodeContext context);
+    bool IsDone(FlowNodeAsset asset, ref FlowNodeContext context);
 }
 
-public class Flow
+public class Flow<T> : Flow
 {
-    object _scriptObject;
-    int _currentIndex;
-    public FlowAsset asset{get; private set;}
+    T _scriptObject;
+
+    public static Flow Instantiate(FlowAsset flowTemplate, string flowName)
+    {
+        var flow = new Flow<T>
+        {
+            asset = flowTemplate,
+            _scriptObject = Activator.CreateInstance<T>(),
+            _currentIndex = flowTemplate._entryIndex,
+            IsEnd = false
+        };
+        flow.SetName(flowName);
+
+        return flow;
+    }
+
+    public override void Update()
+    {
+        if(IsEnd)
+        {
+            return;
+        }
+
+        while(_currentIndex >= 0)
+        {
+            var processor = ProcessorPool.Get(CurrentAsset);
+            if(!_context.isEntered)
+            {
+                _context.isEntered = true;
+                processor.Enter(_scriptObject, CurrentAsset, ref _context);
+                OnEnterEvent?.Invoke(CurrentAsset);
+            }
+
+            if(!processor.IsDone(CurrentAsset, ref _context))
+            {
+                break;
+            }
+
+            var result = _context.result;            
+            _currentIndex = GetNextNode(_currentIndex, result);
+
+            _context = default;
+        }
+
+        IsEnd = _currentIndex < 0;
+    }
+
+    protected override object ScriptObj => _scriptObject;
+    public override void OnDispose()
+    {
+        base.OnDispose();
+
+        try
+        {
+            ((ICleanUp)_scriptObject).CleanUp();
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"回收流程图异常 {Title} {e.Message} {e.StackTrace}");
+        }
+    }
+}
+
+public abstract class Flow
+{
+    protected int _currentIndex;
+    public FlowAsset asset{get; protected set;}
     public FlowNodeAsset CurrentAsset => _currentIndex < 0 ? null : asset._allNodes[_currentIndex];
     string name;
+    CancellationTokenSource _destroyCancellation;
+    protected FlowNodeContext _context;
 
     internal void SetName(string name)
     {
         this.name = name;
     }
 
-    public bool IsEnd{get; private set;}
+    public bool IsEnd{get; protected set;}
 
     // getter
     public IList<FlowNodeAsset> AllNodes => asset._allNodes;
@@ -39,66 +115,23 @@ public class Flow
 
     public Action<FlowNodeAsset> OnEnterEvent { get; set; }
 
-    public static Flow Instantiate(FlowAsset flowTemplate, string flowName)
-    {
-        var flow = new Flow();
-        flow.asset = flowTemplate;
-        flow._scriptObject = Activator.CreateInstance(flowTemplate._scriptType, true);
-        flow._currentIndex = flowTemplate._entryIndex;
-        flow.IsEnd = false;
-        flow.SetName(flowName);
-
-        return flow;
-    }
-
     internal void Reset()
     {
         IsEnd = false;
         _currentIndex = asset._entryIndex;
+        _context = default;
+
+        _destroyCancellation = new CancellationTokenSource();
+        Inject(_destroyCancellation);
     }
 
-    private Flow()
+    public virtual void OnDispose()
     {
-
+        _destroyCancellation.Cancel();
+        _destroyCancellation = null;
     }
 
-    INodeProcessor _processor;
-    public void Update()
-    {
-        if(IsEnd)
-        {
-            return;
-        }
-
-        if(_processor == null)
-        {
-            _processor = ProcessorPool.Get(_scriptObject, CurrentAsset);
-            _processor.Enter();
-            OnEnterEvent?.Invoke(CurrentAsset);
-        }
-
-        while(_processor != null)
-        {
-            if(!_processor.IsDone)
-            {
-                break;
-            }
-
-            _processor.Exit();
-
-            _currentIndex = GetNextNode(_currentIndex, _processor.Result);
-            _processor = ProcessorPool.Get(_scriptObject, CurrentAsset);
-
-            if(_processor != null)
-            {
-                _processor.Enter();
-                OnEnterEvent?.Invoke(CurrentAsset);
-            }
-        }
-
-        IsEnd = _processor == null;
-    }
-
+    protected Flow(){}
 
     public int GetNextNode(int index, string result)
     {
@@ -127,14 +160,17 @@ public class Flow
 
     public void SetParam(object o)
     {
-        if(_processor != null && _processor is InputoutputFlowProcessor inputoutput)
+        if(CurrentAsset == null)
         {
-            inputoutput.SetInput(o);
+            Debug.LogError($"currentasset == null set param {o}");
+            return;
         }
-        else
-        {
-            Debug.LogWarning("输入参数的时候，不在input状态");
-        }
+
+        var processor = ProcessorPool.Get(CurrentAsset) as InputoutputFlowProcessor;
+
+        Assert.IsNotNull(processor, $"当前不是inputoutput节点，无法setparam，当前是 {CurrentAsset.name}");
+
+        processor.SetInput(o, ref _context);
     }
 
     public void Inject(object o)
@@ -146,9 +182,12 @@ public class Flow
             }
      
             if (f.FieldType.IsAssignableFrom (o.GetType())) {
-                f.SetValue (_scriptObject, o);
+                f.SetValue (ScriptObj, o);
                 break;
             }
         }
     }
+
+    public abstract void Update();
+    protected abstract object ScriptObj{get;}
 }

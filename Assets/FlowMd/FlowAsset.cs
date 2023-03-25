@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -29,7 +31,7 @@ public class FlowAsset
     static FlowParserFlow s_FlowParser = new FlowParserFlow();
     static FlowParserMermaid s_MermaidParser = new FlowParserMermaid();
 
-    public static FlowAsset Create(TextAsset asset, bool needInit = true)
+    public static FlowAsset Create<T>(TextAsset asset, bool needInit = true)
     {
         IParser parser;
         if (asset.text.StartsWith("```mermaid"))
@@ -57,7 +59,7 @@ public class FlowAsset
             
             if(node.nodeType != FlowDefine.END_NODE_STR && node.nodeType != FlowDefine.CONDITION_NODE_STR)
             {
-                Assert.IsTrue(connection.ports.Exists(m=>m.portName == PortNameConst.PORT_DEFULT), $"不存在下一个节点 {node.title}");
+                Assert.IsTrue(connection.ports.Count > 0, $"不存在下一个节点 {node.title}");
             }
         }
 
@@ -65,13 +67,13 @@ public class FlowAsset
         
         if(needInit)
         {
-            flow.Init();
+            flow.Init<T>();
         }
 
         return flow;
     }
 
-    private void Init()
+    private void Init<T>()
     {
         ParseScriptType(_scriptName);
 
@@ -80,17 +82,33 @@ public class FlowAsset
             if(item.nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) continue;
 
             MethodInfo methodInfo = _scriptType.GetMethod($"I_{_scriptName}."+ item.methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var asyncMethod = methodInfo.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
+
+            object methodDelegate;
+            if (asyncMethod)
+            {
+                methodDelegate = Delegate.CreateDelegate(typeof(Func<T, UniTask>), methodInfo);
+            }
+            else if(item.nodeType == FlowDefine.CONDITION_NODE_STR)
+            {
+                methodDelegate = Delegate.CreateDelegate(typeof(Func<T, bool>), methodInfo);
+            }
+            else
+            {
+                methodDelegate = Delegate.CreateDelegate(typeof(Action<T>), methodInfo);
+            }
             
             Assert.IsNotNull(methodInfo, $"处理节点出错，无法找到函数节点{item.methodName}，脚本：{_scriptName}");
 
-            item.Init(methodInfo);
+            item.Init(methodDelegate, asyncMethod);
         }
     }
 
     
     private void ParseScriptType(string line)
     {
-        _scriptType = Type.GetType(line);
-        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{line} line={line}，脚本：{_scriptName}");
+        var context = $"{line}, Assembly-CSharp";
+        _scriptType = Type.GetType(context);
+        Assert.IsNotNull(_scriptType, $"找不到对应得脚本文件：{context}，脚本：{_scriptName}");
     }
 }

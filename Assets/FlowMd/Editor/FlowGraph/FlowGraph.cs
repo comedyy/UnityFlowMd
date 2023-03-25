@@ -14,8 +14,8 @@ public class FlowGraph : EditorWindow
 
     public void OpenWithAsset(TextAsset x)
     {
-        var flowAsset = FlowAsset.Create(x);
-        var flow = Flow.Instantiate(flowAsset, "");
+        var flowAsset = FlowAsset.Create<object>(x);
+        var flow = Flow<object>.Instantiate(flowAsset, "");
         OpenWithFlow(flow);
     }
 

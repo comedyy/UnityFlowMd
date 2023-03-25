@@ -1,11 +1,12 @@
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class Mermaid : I_Mermaid {
    //Hard
-   async Task I_Mermaid.A() {
+   async UniTask I_Mermaid.A() {
        Debug.Log("AAA");
-       await Task.Delay(1111);
+       await UniTask.Delay(1111);
        Debug.Log("AfterA");
    }
 
@@ -58,4 +59,8 @@ public class Mermaid : I_Mermaid {
    void I_Mermaid.G() {
        Debug.Log("G");
    }
+
+    public void CleanUp()
+    {
+    }
 }

@@ -1,5 +1,5 @@
-using System.Threading.Tasks;
-public interface I_CommonDrawFlow {
+using Cysharp.Threading.Tasks;
+public interface I_CommonDrawFlow : ICleanUp{
    // 流程开始
    void OnStart();
 
@@ -14,9 +14,6 @@ public interface I_CommonDrawFlow {
 
    // 加载下一个猜画
    void OnLoadNextPic();
-
-   // 等待输入
-   void WaitForInput(object param);
 
    // 输入为画画正确
    bool CheckRightInput();
@@ -45,4 +42,7 @@ public interface I_CommonDrawFlow {
    // 播放跳过表现
    void OnPlaySkipEffect();
 
+}
+public class WaitForInputConst {
+   public static string _DEFAULT="DEFAULT";
 }

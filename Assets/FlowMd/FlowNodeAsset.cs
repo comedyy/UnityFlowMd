@@ -13,8 +13,8 @@ public class FlowNodeAsset
     public bool isAsyncInMd;
 
 
-    public MethodInfo methodInfo;
     public bool asyncMethod;
+    public object methodDelegate;
 
     public FlowNodeAsset(string nodeType, string name, string title, string method, bool isAsyncInMd)
     {
@@ -25,13 +25,9 @@ public class FlowNodeAsset
         this.isAsyncInMd = isAsyncInMd;
     }
 
-    public void Init(MethodInfo info)
+    public void Init(object methodDelegate, bool async)
     {
-        this.methodInfo = info;
-
-        if(this.methodInfo != null)
-        {
-            this.asyncMethod = info.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
-        }
+        this.methodDelegate = methodDelegate;
+        this.asyncMethod = async;
     }
 }

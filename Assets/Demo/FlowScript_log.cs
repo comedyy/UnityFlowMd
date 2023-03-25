@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class FlowScript_log : I_FlowScript_log {
@@ -6,15 +7,15 @@ public class FlowScript_log : I_FlowScript_log {
      string noInject = "noInject";
 
    // 群聊开始
-   async Task I_FlowScript_log.Start() {
+   async UniTask I_FlowScript_log.Start() {
        Debug.Log($"enter Start {context}");
-        await Task.Delay(1000);
+        await UniTask.Delay(1000);
         Debug.Log($"Exit Start {context} - {noInject}");
    }
 
    // 群友发言
-   async Task I_FlowScript_log.Say() {
-               await Task.Delay(2000);
+   async UniTask I_FlowScript_log.Say() {
+               await UniTask.Delay(2000);
         Debug.Log($"enter say  {context}");
    }
 
@@ -29,4 +30,7 @@ public class FlowScript_log : I_FlowScript_log {
         Debug.Log($"End  {context}");
    }
 
+    public void CleanUp()
+    {
+    }
 }

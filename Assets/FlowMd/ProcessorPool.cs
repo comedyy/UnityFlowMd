@@ -1,136 +1,92 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public static class ProcessorPool
 {
-    public static INodeProcessor Get(object scriptObj, FlowNodeAsset asset)
+    static readonly Dictionary<string, INodeProcessor> _dicProcessors = new Dictionary<string, INodeProcessor>(){
+        {FlowDefine.START_NODE_STR, new NormalFlowProcessor()},
+        {FlowDefine.END_NODE_STR, new NormalFlowProcessor()},
+        {FlowDefine.OPERATION_NODE_STR, new NormalFlowProcessor()},
+        {FlowDefine.INPUTOUTPUT_NODE_STR, new InputoutputFlowProcessor()},
+        {FlowDefine.CONDITION_NODE_STR, new ConditionFlowProcessor()},
+    };
+    public static INodeProcessor Get(FlowNodeAsset asset)
     {
         if(asset == null) return null;
 
         var nodeType = asset.nodeType;
-        INodeProcessor processor;
-
-        if (nodeType == FlowDefine.START_NODE_STR 
-            || nodeType == FlowDefine.END_NODE_STR 
-            || nodeType == FlowDefine.OPERATION_NODE_STR)
+        if(_dicProcessors.TryGetValue(nodeType, out var processor))
         {
-            processor = new NormalFlowProcessor();
-        } 
-        else if(nodeType == FlowDefine.INPUTOUTPUT_NODE_STR) processor = new InputoutputFlowProcessor();
-        else if(nodeType == FlowDefine.CONDITION_NODE_STR) processor = new ConditionFlowProcessor();
-        else throw new System.Exception($"unknown NodeType {nodeType}");
+            return processor;
+        }
 
-        processor.Init(scriptObj, asset);
-
-        return processor;
+        throw new System.Exception($"unknown NodeType {nodeType}");
     }
 }
 
 public class NormalFlowProcessor : INodeProcessor
 {
-    object methodInfoScript;
-    FlowNodeAsset asset;
-    Task _curentTask;
-
-    public string Result => PortNameConst.PORT_DEFULT;
-    public bool IsDone => _curentTask == null || _curentTask.IsCompleted;
-
-    public void Enter()
+    public bool IsDone(FlowNodeAsset asset, ref FlowNodeContext context)
     {
-        if(asset.methodInfo == null) return;
+        if(context.task.Status == UniTaskStatus.Faulted)
+        {
+            Debug.LogError($"Excute Task Node Faild {asset}");
+            context.task.GetAwaiter().GetResult();
+        }
 
+        return context.task.Status == UniTaskStatus.Succeeded;
+    }
+
+    public void Enter<T>(T scriptObj, FlowNodeAsset asset, ref FlowNodeContext context)
+    {
+        Assert.IsNotNull(asset.methodDelegate);
+        
         if(asset.asyncMethod)
         {
-            _curentTask = (Task)asset.methodInfo.Invoke(methodInfoScript, null);
+            context.task = ((Func<T, UniTask>)asset.methodDelegate).Invoke(scriptObj);
         }
         else
         {
-            asset.methodInfo.Invoke(methodInfoScript, null);
+            ((Action<T>)asset.methodDelegate).Invoke(scriptObj);
         }
-    }
-   
-    public void Init(object scriptObj, FlowNodeAsset asset)
-    {
-        this.methodInfoScript = scriptObj;
-        this.asset = asset;
-    }
 
-    public void Exit()
-    {
-        this._curentTask = null;
-    }
-
-    public void Dispose()
-    {
-        this.methodInfoScript = null;
-        this.asset = null;
+        context.result = PortNameConst.PORT_DEFULT;
     }
 }
 
 public class ConditionFlowProcessor : INodeProcessor
 {
-    object methodInfoScript;
-    FlowNodeAsset asset;
-
-    public bool IsDone => true;
-    public string Result{get; private set;}
-
-    public void Init(object methodInfoScript, FlowNodeAsset asset)
+    public bool IsDone(FlowNodeAsset asset, ref FlowNodeContext context)
     {
-        this.methodInfoScript = methodInfoScript;
-        this.asset = asset;
+        return true;
     }
 
-    public void Enter()
+    public void Enter<T>(T scriptObj, FlowNodeAsset asset, ref FlowNodeContext context)
     {
-        Result = (bool)this.asset.methodInfo.Invoke(methodInfoScript, null) ? PortNameConst.CONDITION_YES : PortNameConst.CONDITION_NO;
-    }
+        Assert.IsNotNull(asset.methodDelegate);
 
-    public void Dispose()
-    {
-        this.methodInfoScript = null;
-        this.asset = null;
-    }
-    
-    public void Exit()
-    {
+        context.result = ((Func<T, bool>)asset.methodDelegate).Invoke(scriptObj) ? PortNameConst.CONDITION_YES : PortNameConst.CONDITION_NO;
     }
 }
 
 public class InputoutputFlowProcessor : INodeProcessor
 {
-    object methodInfoScript;
-    FlowNodeAsset asset;
-
-    public string Result{get; private set;}
-    public bool IsDone { get; private set; }
-
-    public void Init(object scriptObj, FlowNodeAsset asset)
+    public bool IsDone(FlowNodeAsset asset, ref FlowNodeContext context)
     {
-        this.methodInfoScript = scriptObj;
-        this.asset = asset;
+        return !string.IsNullOrEmpty(context.result);
     }
 
-    public void Enter()
+    public void Enter<T>(T scriptObj, FlowNodeAsset asset, ref FlowNodeContext context)
     {
-        IsDone = false;
     }
 
-    public void Dispose()
+    public void SetInput(object o, ref FlowNodeContext context)
     {
-        this.methodInfoScript = null;
-        this.asset = null;
-    }
-
-    public void SetInput(object o)
-    {
-        Result = (string)o;
-        IsDone = true;
-    }
-
-    public void Exit()
-    {
+        context.result = (string)o;
     }
 }

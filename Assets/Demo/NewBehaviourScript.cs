@@ -29,7 +29,7 @@ public class NewBehaviourScript : MonoBehaviour
         if(y)
         {
             y = false;
-            Flow = FlowMgr.Instance.AddFlow(textAsset, (i++).ToString());
+            Flow = FlowMgr.Instance.AddFlow<FlowScript_log>(textAsset, (i++).ToString());
             Flow.Inject(Flow.Title);
         }
     }

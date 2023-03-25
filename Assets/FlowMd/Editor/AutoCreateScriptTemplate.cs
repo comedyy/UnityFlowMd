@@ -31,7 +31,7 @@ public class AutoCreateScriptTemplate
         }
 
         List<CreateMethodInfo> lst = new List<CreateMethodInfo>();
-        FlowAsset asset = FlowAsset.Create(x, false);
+        FlowAsset asset = FlowAsset.Create<object>(x, false);
         for(int i = 0; i < asset._allNodes.Count; i++)
         {
             var item = asset._allNodes[i];
@@ -47,14 +47,14 @@ public class AutoCreateScriptTemplate
 
         if(!File.Exists(path))
         {
-            builder.AppendLine($"using System.Threading.Tasks;");
+            builder.AppendLine($"using Cysharp.Threading.Tasks;");
             builder.AppendLine($"public class {name} : I_{name} {{");
 
             foreach (var line in lst)
             {
                 GenerateMethod(line, builder, $"I_{name}");
             }
-
+            builder.AppendLine("    void ICleanUp.CleanUp(){}");
             builder.AppendLine($"}}");
 
             File.WriteAllText(path, builder.ToString());
@@ -62,8 +62,8 @@ public class AutoCreateScriptTemplate
         }
 
         builder.Clear();
-        builder.AppendLine($"using System.Threading.Tasks;");
-        builder.AppendLine($"public interface I_{name} {{");
+        builder.AppendLine($"using Cysharp.Threading.Tasks;");
+        builder.AppendLine($"public interface I_{name} : ICleanUp{{");
 
         foreach (var line in lst)
         {
@@ -90,7 +90,7 @@ public class AutoCreateScriptTemplate
         builder.AppendLine($"public class {line.methodName}Const {{");
         foreach (var item in line.allPortNames)
         {
-            builder.AppendLine($"   public string _{item}=\"{item}\";");
+            builder.AppendLine($"   public static string _{item}=\"{item}\";");
         }
         builder.AppendLine($"}}");
     }
@@ -102,10 +102,9 @@ public class AutoCreateScriptTemplate
         var needAsync = line.isAsync;
         var method = line.methodName;
         var comment = line.comment;
+        if(isInputOutput) return; // input output 不需要函数
 
-        if(isInputOutput) return;
-
-        var retStr = isCondition ? "bool" : (needAsync ? "Task" : "void");
+        var retStr = isCondition ? "bool" : (needAsync ? "UniTask" : "void");
         var param = isInputOutput ? "object param" : "";
         builder.AppendLine($"   //{comment}");
         builder.AppendLine($"   {retStr} {method}({param});\n");
@@ -134,9 +133,9 @@ public class AutoCreateScriptTemplate
         var method = info.methodName;
         var comment = info.comment;
 
+        var retStr = isCondition ? "bool" : (needAsync ? "async UniTask" : "void");
         if(isInputOutput) return; // input output 不需要函数
 
-        var retStr = isCondition ? "bool" : (needAsync ? "async Task" : "void");
         var param = isInputOutput ? "object param" : "";
         builder.AppendLine($"   //{comment}");
         builder.AppendLine($"   {retStr} {interfaceName}.{method}({param}) {{");

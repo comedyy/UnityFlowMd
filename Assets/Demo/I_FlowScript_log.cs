@@ -1,10 +1,10 @@
-using System.Threading.Tasks;
-public interface I_FlowScript_log {
+using Cysharp.Threading.Tasks;
+public interface I_FlowScript_log : ICleanUp{
    // 群聊开始
-   Task Start();
+   UniTask Start();
 
    // 群友发言
-   Task Say();
+   UniTask Say();
 
    // 赖子发屎图
    bool IsShit();
@@ -12,4 +12,7 @@ public interface I_FlowScript_log {
    // 群聊结束
    void End();
 
+}
+public class WaitMyEnterConst {
+   public static string _DEFAULT="DEFAULT";
 }
